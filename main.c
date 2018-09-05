@@ -60,7 +60,7 @@ void main()
 //	can_comms_initialize();
 	output_initialize(&_context);
 
-	board_init_pwm(&_context, _pwm_handler);
+//	board_init_pwm(&_context, _pwm_handler);
 
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);

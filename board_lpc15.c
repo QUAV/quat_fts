@@ -481,3 +481,13 @@ void board_set_output(output_mask_t mask, output_mask_t value)
 #endif
 }
 
+
+void board_enable_charges(bool enable)
+{
+	// TODO
+}
+
+void board_fire(bool fire)
+{
+	// TODO
+}

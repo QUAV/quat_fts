@@ -128,6 +128,7 @@
       <file file_name="usb_config.c" />
       <file file_name="usb_comms.c" />
       <file file_name="mavlink.c" />
+      <file file_name="output.c" />
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/LPC1000/LPC15xx_Target.js">
