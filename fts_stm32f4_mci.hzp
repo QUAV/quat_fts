@@ -1,0 +1,273 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="fts_solution" target="8" version="2">
+  <project Name="fts_stm32f4_mci">
+    <configuration
+      Family="STM32"
+      Name="Common"
+      Placement="Flash"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_linker_heap_size="4096"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="2048"
+      arm_linker_stack_size="512"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll"
+      arm_target_connect_with_reset="Yes"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_interface_type="SWD"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_restrict_memory_accesses="No"
+      build_intermediate_directory=".output/$(Configuration)"
+      build_output_directory=".output/$(Configuration)"
+      c_only_additional_options="-fms-extensions"
+      c_system_include_directories="$(TargetsDir)/STM32/include;$(PackagesDir)/CMSIS_4/CMSIS/Include"
+      c_user_include_directories=".;$(EssDir);$(EssDir)/include;$(EssDir)/driver"
+      debug_start_from_entry_point_symbol="No"
+      gcc_entry_point="Reset_Handler"
+      link_include_standard_libraries="No"
+      linker_additional_files="$(EssDir)/support/crossworks/libm$(LibExt)$(LIB)"
+      linker_section_placement_file="$(EssDir)/support/stm32f4/flash_placement.xml"
+      macros="EssDir=../../ess"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_script_file="$(TargetsDir)/STM32/STM32_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32F2xx_Loader_rpc.elf)"
+      arm_target_loader_can_erase_all="Yes"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <configuration Name="RAM" target_reset_script="Reset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <folder Name="kernel">
+        <file file_name="../../ess/kernel/ascii.c" />
+        <file file_name="../../ess/kernel/autoinit.c" />
+        <file file_name="../../ess/kernel/boot.c" />
+        <file file_name="../../ess/kernel/datetime.c" />
+        <file file_name="../../ess/kernel/dispatcher.c" />
+        <file file_name="../../ess/kernel/event.c" />
+        <file file_name="../../ess/kernel/io.c" />
+        <file file_name="../../ess/kernel/list.c" />
+        <file file_name="../../ess/kernel/memory.c" />
+        <file file_name="../../ess/kernel/mutex.c" />
+        <file file_name="../../ess/kernel/panic.c" />
+        <file file_name="../../ess/kernel/port.c" />
+        <file file_name="../../ess/kernel/stream.c" />
+        <file file_name="../../ess/kernel/thread.c" />
+        <file file_name="../../ess/kernel/time.c" />
+        <file file_name="../../ess/kernel/tree.c" />
+      </folder>
+      <folder Name="machine">
+        <folder Name="armv7-m">
+          <file file_name="../../ess/machine/armv7-m/aeabi_misc.c" />
+          <file file_name="../../ess/machine/armv7-m/kernel.c" />
+          <file file_name="../../ess/machine/armv7-m/systick.c" />
+        </folder>
+        <folder Name="stm32f4">
+          <file file_name="../../ess/machine/stm32f4/machine.c" />
+          <file file_name="../../ess/machine/stm32f4/startup.c" />
+          <file file_name="../../ess/machine/stm32f4/vectors.s" />
+        </folder>
+      </folder>
+      <folder Name="support">
+        <folder Name="stdlib">
+          <file file_name="../../ess/support/stdlib/malloc.c" />
+          <file file_name="../../ess/support/stdlib/stdio.c" />
+          <file file_name="../../ess/support/stdlib/stdlib.c" />
+          <file file_name="../../ess/support/stdlib/string.c" />
+        </folder>
+        <folder Name="misc">
+          <file file_name="../../ess/support/misc/eeprom.c" />
+          <file file_name="../../ess/support/misc/crc16.c" />
+          <folder Name="sdcard">
+            <file file_name="../../ess/support/misc/sdcard/sdcard.c" />
+            <file file_name="../../ess/support/misc/sdcard/sdcard_rawfs.c" />
+            <file file_name="../../ess/support/misc/sdcard/sdcard_mci.c" />
+          </folder>
+          <file file_name="../../ess/support/misc/93cx6.c" />
+        </folder>
+        <folder Name="stm32f4">
+          <file file_name="../../ess/support/stm32f4/cpu.c" />
+          <file file_name="../../ess/support/stm32f4/gpio.c" />
+          <file file_name="../../ess/support/stm32f4/i2c.c" />
+          <file file_name="../../ess/support/stm32f4/usart.c" />
+          <file file_name="../../ess/support/stm32f4/bxcan.c" />
+          <file file_name="../../ess/support/stm32f4/sdio.c" />
+          <file file_name="../../ess/support/stm32f4/dma.c" />
+          <file file_name="../../ess/support/stm32f4/spi.c" />
+          <file file_name="../../ess/support/stm32f4/fmc.c">
+            <configuration
+              Name="SmartLogger"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../../ess/support/stm32f4/exti.c" />
+          <file file_name="../../ess/support/stm32f4/dma2d.c">
+            <configuration
+              Name="SmartLogger"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../../ess/support/stm32f4/dsi_host.c">
+            <configuration Name="Pixhawk" build_exclude_from_build="Yes" />
+            <configuration
+              Name="SmartLogger"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../../ess/support/stm32f4/ltdc.c">
+            <configuration Name="Pixhawk" build_exclude_from_build="Yes" />
+            <configuration
+              Name="SmartLogger"
+              build_exclude_from_build="Yes" />
+          </file>
+          <file file_name="../../ess/support/stm32f4/timer.c" />
+        </folder>
+        <folder Name="fs">
+          <folder Name="fatfs">
+            <file file_name="../../ess/support/fs/fatfs/fat.c" />
+            <file file_name="../../ess/support/fs/fatfs/fat_handler.c" />
+            <file file_name="../../ess/support/fs/fatfs/mbr.c" />
+          </folder>
+        </folder>
+        <folder Name="gfx">
+          <file file_name="../../ess/support/gfx/fb.c" />
+          <file file_name="../../ess/support/gfx/font.c" />
+          <file file_name="../../ess/support/gfx/gfx.c" />
+          <file file_name="../../ess/support/gfx/rgb16.c" />
+          <file file_name="../../ess/support/gfx/argb32.c" />
+          <folder Name="display">
+            <file file_name="../../ess/support/gfx/display/otm8009a.c" />
+          </folder>
+          <file file_name="../../ess/support/gfx/polygon.c" />
+        </folder>
+        <file file_name="../../ess/support/can_hal.c" />
+      </folder>
+      <folder Name="driver">
+        <folder Name="io">
+          <file file_name="../../ess/driver/io/uart_device.c" />
+        </folder>
+        <folder Name="meta">
+          <file file_name="../../ess/driver/meta/config.c" />
+        </folder>
+        <folder Name="fs">
+          <file file_name="../../ess/driver/fs/file.c" />
+          <file file_name="../../ess/driver/fs/fs.c" />
+          <file file_name="../../ess/driver/fs/handler.c" />
+          <file file_name="../../ess/driver/fs/part.c" />
+          <file file_name="../../ess/driver/fs/path.c" />
+          <file file_name="../../ess/driver/fs/rawfs.c" />
+        </folder>
+      </folder>
+      <file file_name="main.c" />
+      <file file_name="board_stm32f4.c" />
+      <file file_name="mavlink.c" />
+      <file file_name="output_io.c" />
+    </folder>
+    <folder Name="System Files" />
+    <folder Name="CMSIS Files">
+      <file file_name="$(TargetsDir)/STM32/include/system_stm32f4xx.c" />
+      <file file_name="$(TargetsDir)/STM32/include/system_stm32f4xx.h" />
+    </folder>
+    <configuration
+      Name="STM32F469I-DISCO"
+      Target="STM32F469NI"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_simulator_memory_simulation_parameter="STM32F469NI;0x200000;0x60000"
+      c_preprocessor_definitions="STM32F469xx"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F46_79x_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F469NI_MemoryMap.xml" />
+    <configuration
+      Name="Pixhawk"
+      Target="STM32F427VI"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_simulator_memory_simulation_parameter="STM32F427VI;0x200000;0x30000"
+      c_preprocessor_definitions="STM32F427xx"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F427x_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F427VI_MemoryMap.xml" />
+    <configuration
+      Name="SmartLogger"
+      Target="STM32F405RG"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_simulator_memory_simulation_parameter="STM32F405RG;0x100000;0x20000"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F405_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F405RG_MemoryMap.xml"
+      macros="DeviceVectorsFile=STM32F405xx.vec" />
+  </project>
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_optimization_level="None"
+    hidden="Yes" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 1"
+    gcc_optimization_level="Level 1"
+    hidden="Yes" />
+  <configuration
+    Name="Pixhawk"
+    c_preprocessor_definitions="BOARD_PIXHAWK;HSE_VALUE=24000000UL;PLLM_VALUE=12;PLLN_VALUE=336;PLLP_VALUE=4;PLLQ_VALUE=14;UART_DEVICE_COUNT=8;STDOUT_STREAM=&quot;/dev/uart7/115200&quot;;LOGGER_CAN_MODULE=0;LOGGER_CAN_BITRATE=500000;GPS_UART_MODULE=3;GPS_BAUDRATE=57600;EEPROM_I2C_MODULE=0;SDCARD_SPI_MODULE=0;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="PixHawk Release"
+    inherited_configurations="Pixhawk;Release;THUMB" />
+  <configuration
+    Name="PixHawk Debug"
+    inherited_configurations="Debug;Pixhawk;THUMB" />
+  <configuration
+    Name="STM32F469I-DISCO"
+    c_preprocessor_definitions="BOARD_F469I_DISCO;HSE_VALUE=8000000UL;PLLM_VALUE=4;PLLN_VALUE=336;PLLP_VALUE=4;PLLQ_VALUE=14;UART_DEVICE_COUNT=6;STDOUT_STREAM=&quot;/dev/uart2/115200&quot;;LOGGER_CAN_MODULE=1;LOGGER_CAN_BITRATE=250000;GPS_UART_MODULE=1;GPS_BAUDRATE=57600;EEPROM_I2C_MODULE=0;DISABLE_USB_COMMS;DSI_PLL_NDIV=125;DSI_PLL_IDF=2;DSI_PLL_ODF=0;LTDC_PLL_N=192;LTDC_PLL_R=7;LTDC_PLL_D=0;FT6X06_I2C_MODULE=0"
+    hidden="Yes" />
+  <configuration
+    Name="STM32F469I-DISCO Release"
+    inherited_configurations="THUMB;STM32F469I-DISCO;Release" />
+  <configuration
+    Name="STM32F469I-DISCO Debug"
+    inherited_configurations="Debug;STM32F469I-DISCO;THUMB" />
+  <configuration
+    Name="Common"
+    c_preprocessor_definitions="STDOUT_TIMEOUT=100;MAVLINK_SYS_ID=2;MAVLINK_COMP_ID=1" />
+  <configuration
+    Name="SmartLogger"
+    c_preprocessor_definitions="BOARD_SMART_LOGGER;HSE_VALUE=8000000UL;PLLM_VALUE=4;PLLN_VALUE=336;PLLP_VALUE=4;PLLQ_VALUE=14;UART_DEVICE_COUNT=6;STDOUT_STREAM=&quot;/dev/uart2/115200&quot;;LOGGER_CAN_MODULE=0;LOGGER_CAN_BITRATE=250000;GPS_UART_MODULE=1;GPS_BAUDRATE=57600;EEPROM_I2C_MODULE=0;SDCARD_SPI_MODULE=0;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="SmartLogger Debug"
+    inherited_configurations="Debug;SmartLogger;THUMB" />
+  <configuration
+    Name="SmartLogger Release"
+    inherited_configurations="Release;SmartLogger;THUMB" />
+  <configuration
+    Name="Alternate Led"
+    c_preprocessor_definitions="ALTERNATE_LED"
+    hidden="Yes" />
+  <configuration
+    Name="PixHawk Alt Debug"
+    inherited_configurations="Alternate Led;Debug;Pixhawk;THUMB" />
+  <configuration
+    Name="PixHawk Alt Release"
+    inherited_configurations="Alternate Led;Pixhawk;Release;THUMB" />
+</solution>

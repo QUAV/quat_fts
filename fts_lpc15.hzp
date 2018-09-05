@@ -1,0 +1,184 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="fts_lpc15" target="8" version="2">
+  <project Name="fts_lpc15">
+    <configuration
+      Name="Common"
+      Target="LPC1549"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_interwork="No"
+      arm_linker_heap_size="2048"
+      arm_linker_process_stack_size="2048"
+      arm_linker_stack_size="1024"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/LPC1000/LPC1000SimulatorMemory.dll"
+      arm_simulator_memory_simulation_parameter="LPC15xx;0x40000;0x9000;0x0"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_interface_type="SWD"
+      arm_target_loader_parameter="12000000"
+      build_intermediate_directory=".output/$(Configuration)"
+      build_output_directory=".output/$(Configuration)"
+      c_only_additional_options="-fms-extensions"
+      c_preprocessor_definitions="__$(LPC1000_Series)_SERIES"
+      c_system_include_directories="$(TargetsDir)/LPC1000/include/CMSIS;$(TargetsDir)/CMSIS_3/CMSIS/Include;$(TargetsDir)/LPC1000/include;$(EssDir)/;$(EssDir)/include;$(EssDir)/driver"
+      c_user_include_directories=""
+      gcc_entry_point="Reset_Handler"
+      link_include_standard_libraries="No"
+      link_include_startup_code="No"
+      linker_additional_files="$(TargetsDir)/LPC1000/lib/liblpc1000$(LibExt)$(LIB);$(EssDir)/support/crossworks/libm$(LibExt)$(LIB)"
+      linker_memory_map_file="$(TargetsDir)/LPC1000/LPC1549_MemoryMap.xml"
+      linker_output_format="bin"
+      macros="LPC1000_Series=LPC15xx;EssDir=../../ess"
+      oscillator_frequency="12MHz"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/LPC1000/propertyGroups15xx.xml"
+      target_loader_erase_all="Yes" />
+    <configuration
+      Name="Flash"
+      Placement="Flash"
+      arm_target_flash_loader_file_path="$(TargetsDir)/LPC1000/Release/Loader_lpc15xx.elf"
+      arm_target_flash_loader_type="LIBMEM RPC Loader"
+      linker_patch_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(TargetsDir)/LPC1000/LPC1000_LinkPatch.js\&quot;);patch(\&quot;$(TargetPath)\&quot;);&quot;"
+      linker_section_placement_file="$(EssDir)/support/lpc15/flash_placement.xml"
+      target_reset_script="FLASHReset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <folder Name="support">
+        <folder Name="lpc15">
+          <file file_name="../../ess/support/lpc15/adc.c" />
+          <file file_name="../../ess/support/lpc15/can.c" />
+          <file file_name="../../ess/support/lpc15/cpu.c" />
+          <file file_name="../../ess/support/lpc15/gpio.c" />
+          <file file_name="../../ess/support/lpc15/sct.c" />
+          <file file_name="../../ess/support/lpc15/swm.c" />
+          <file file_name="../../ess/support/lpc15/uart.c" />
+          <file file_name="../../ess/support/lpc15/usb_device.c" />
+          <file file_name="../../ess/support/lpc15/spi.c" />
+          <file file_name="../../ess/support/lpc15/inmux.c" />
+          <file file_name="../../ess/support/lpc15/i2c.c" />
+          <file file_name="../../ess/support/lpc15/iap.c" />
+          <file file_name="../../ess/support/lpc15/pwm.c" />
+          <file file_name="../../ess/support/lpc15/dac.c" />
+          <file file_name="../../ess/support/lpc15/sctipu.c" />
+        </folder>
+        <folder Name="misc">
+          <file file_name="../../ess/support/misc/c_can.c" />
+          <file file_name="../../ess/support/misc/crc16.c" />
+          <file file_name="../../ess/support/misc/eeprom.c" />
+        </folder>
+        <folder Name="stdlib">
+          <file file_name="../../ess/support/stdlib/malloc.c" />
+          <file file_name="../../ess/support/stdlib/stdio.c" />
+          <file file_name="../../ess/support/stdlib/stdlib.c" />
+          <file file_name="../../ess/support/stdlib/string.c" />
+        </folder>
+        <folder Name="usb">
+          <folder Name="devices">
+            <file file_name="../../ess/support/usb/devices/ftdi.c" />
+          </folder>
+        </folder>
+      </folder>
+      <file file_name="board_lpc15.c" />
+      <file file_name="main.c" />
+      <folder Name="kernel">
+        <file file_name="../../ess/kernel/ascii.c" />
+        <file file_name="../../ess/kernel/autoinit.c" />
+        <file file_name="../../ess/kernel/boot.c" />
+        <file file_name="../../ess/kernel/datetime.c" />
+        <file file_name="../../ess/kernel/dispatcher.c" />
+        <file file_name="../../ess/kernel/event.c" />
+        <file file_name="../../ess/kernel/io.c" />
+        <file file_name="../../ess/kernel/list.c" />
+        <file file_name="../../ess/kernel/memory.c" />
+        <file file_name="../../ess/kernel/mutex.c" />
+        <file file_name="../../ess/kernel/panic.c" />
+        <file file_name="../../ess/kernel/port.c" />
+        <file file_name="../../ess/kernel/stream.c" />
+        <file file_name="../../ess/kernel/thread.c" />
+        <file file_name="../../ess/kernel/time.c" />
+        <file file_name="../../ess/kernel/tree.c" />
+      </folder>
+      <folder Name="driver">
+        <folder Name="io">
+          <file file_name="../../ess/driver/io/uart_device.c" />
+        </folder>
+        <folder Name="usb">
+          <file file_name="../../ess/driver/usb/configuration.c" />
+          <file file_name="../../ess/driver/usb/device.c" />
+          <file file_name="../../ess/driver/usb/usb.c" />
+        </folder>
+        <folder Name="meta">
+          <file file_name="../../ess/driver/meta/config.c" />
+          <file file_name="../../ess/driver/meta/parse.c" />
+        </folder>
+      </folder>
+      <folder Name="machine">
+        <folder Name="armv7-m">
+          <file file_name="../../ess/machine/armv7-m/aeabi_misc.c" />
+          <file file_name="../../ess/machine/armv7-m/kernel.c" />
+          <file file_name="../../ess/machine/armv7-m/systick.c" />
+        </folder>
+        <folder Name="lpc15">
+          <file file_name="../../ess/machine/lpc15/machine.c" />
+          <file file_name="../../ess/machine/lpc15/startup.c" />
+          <file file_name="../../ess/machine/lpc15/vectors.s" />
+        </folder>
+      </folder>
+      <file file_name="usb_config.c" />
+      <file file_name="usb_comms.c" />
+      <file file_name="mavlink.c" />
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(TargetsDir)/LPC1000/LPC15xx_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
+      </file>
+    </folder>
+    <folder Name="CMSIS Files">
+      <file file_name="$(TargetsDir)/LPC1000/include/CMSIS/LPC15xx.h" />
+      <file file_name="$(TargetsDir)/LPC1000/include/CMSIS/system_LPC15xx.h" />
+      <file file_name="$(TargetsDir)/LPC1000/include/CMSIS/system_LPC15xx.c" />
+    </folder>
+  </project>
+  <configuration Name="Flash" hidden="Yes" />
+  <configuration
+    Name="Debug"
+    build_debug_information="Yes"
+    c_preprocessor_definitions="DEBUG"
+    gcc_optimization_level="None"
+    hidden="Yes"
+    link_include_startup_code="No" />
+  <configuration
+    Name="Release"
+    build_debug_information="No"
+    c_additional_options="-g1"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_optimization_level="Level 1"
+    hidden="Yes"
+    link_include_startup_code="No" />
+  <configuration
+    Name="Common"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="USB_USER_DEVICE_VENDORID=0x0403;USB_USER_DEVICE_PRODUCTID=0x6001;USB_USER_DEVICE_VERSION=0x600;STDIO_FORMAT_METADATA;MAVLINK_SYS_ID=2;MAVLINK_COMP_ID=1" />
+  <configuration
+    Name="LPC1549Xpresso_v2"
+    c_preprocessor_definitions="BOARD_LPCXPRESSO;UART_DEVICE_COUNT=2;STDOUT_STREAM=&quot;/dev/uart1/115200&quot;;USB_USER_DEVICE_PRODUCT=&quot;Governor LPCXpresso&quot;;USB_USER_DEVICE_MANUFACTURER=&quot;Embedded Artists&quot;;USB_USER_DEVICE_SERIALNUMBER=&quot;12345678Q&quot;;PWM_SCT1_FIRST_OUTPUT=1;VSW_DIVIDER_RATIO=21"
+    hidden="Yes" />
+  <configuration
+    Name="LPCXPRESSO Debug"
+    inherited_configurations="Debug;Flash;LPC1549Xpresso_v2" />
+  <configuration
+    Name="LPCXPRESSO Release"
+    inherited_configurations="Flash;LPC1549Xpresso_v2;Release" />
+  <configuration
+    Name="GOV_R2"
+    c_preprocessor_definitions="BOARD_GOV_R2;USB_USER_DEVICE_PRODUCT=&quot;Governor R2 Interface&quot;;USB_USER_DEVICE_MANUFACTURER=&quot;Quaternium Electronics&quot;;USB_USER_DEVICE_SERIALNUMBER=&quot;12345678Q&quot;;PWM_SCT1_FIRST_OUTPUT=1;VSW_DIVIDER_RATIO=23"
+    hidden="Yes" />
+  <configuration
+    Name="GOV R2 Release"
+    inherited_configurations="Flash;GOV_R2;Release" />
+  <configuration
+    Name="GOV R2 Debug"
+    inherited_configurations="Debug;Flash;GOV_R2" />
+</solution>

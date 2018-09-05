@@ -1,0 +1,6 @@
+*.d
+*.bak
+*.hzs
+.output
+.vs
+doc/html

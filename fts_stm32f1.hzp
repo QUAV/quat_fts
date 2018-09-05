@@ -1,0 +1,197 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="fts_out_stm32f1" target="8" version="2">
+  <project Name="fts_out_stm32f1">
+    <configuration
+      Family="STM32"
+      Name="Common"
+      Placement="Flash"
+      Target="STM32F103CB"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_fpu_type="None"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_linker_heap_size="1024"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="2048"
+      arm_linker_stack_size="512"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll"
+      arm_simulator_memory_simulation_parameter="STM32F103CB;0x20000;0x5000"
+      arm_target_connect_with_reset="Yes"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_interface_type="SWD"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_restrict_memory_accesses="Yes"
+      build_intermediate_directory="$(HomeDir)/Temp/.output/$(Configuration)"
+      build_output_directory="$(HomeDir)/Temp/.output/$(Configuration)"
+      c_only_additional_options="-fms-extensions"
+      c_system_include_directories="$(TargetsDir)/STM32/include;$(PackagesDir)/CMSIS_4/CMSIS/Include"
+      c_user_include_directories=".;$(EssDir);$(EssDir)/include;$(EssDir)/driver"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F103xx_Peripherals.xml"
+      gcc_entry_point="Reset_Handler"
+      link_include_standard_libraries="No"
+      linker_additional_files="$(EssDir)/support/crossworks/libm$(LibExt)$(LIB)"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F103CB_MemoryMap.xml"
+      linker_section_placement_file="$(EssDir)/support/stm32f1/flash_placement.xml"
+      macros="EssDir=../../ess"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
+      target_get_partname_script="GetPartName()"
+      target_loader_erase_all="Yes"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_script_file="$(TargetsDir)/STM32/STM32_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/Loader_rpc.elf)"
+      arm_target_loader_can_erase_all="Yes"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <configuration Name="RAM" target_reset_script="Reset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <folder Name="kernel">
+        <file file_name="../../ess/kernel/ascii.c" />
+        <file file_name="../../ess/kernel/autoinit.c" />
+        <file file_name="../../ess/kernel/boot.c" />
+        <file file_name="../../ess/kernel/datetime.c" />
+        <file file_name="../../ess/kernel/dispatcher.c" />
+        <file file_name="../../ess/kernel/event.c" />
+        <file file_name="../../ess/kernel/io.c" />
+        <file file_name="../../ess/kernel/list.c" />
+        <file file_name="../../ess/kernel/memory.c" />
+        <file file_name="../../ess/kernel/mutex.c" />
+        <file file_name="../../ess/kernel/panic.c" />
+        <file file_name="../../ess/kernel/port.c" />
+        <file file_name="../../ess/kernel/stream.c" />
+        <file file_name="../../ess/kernel/thread.c" />
+        <file file_name="../../ess/kernel/time.c" />
+        <file file_name="../../ess/kernel/tree.c" />
+      </folder>
+      <folder Name="machine">
+        <folder Name="armv7-m">
+          <file file_name="../../ess/machine/armv7-m/aeabi_misc.c" />
+          <file file_name="../../ess/machine/armv7-m/kernel.c" />
+          <file file_name="../../ess/machine/armv7-m/systick.c" />
+        </folder>
+        <folder Name="stm32f1">
+          <file file_name="../../ess/machine/stm32f1/machine.c" />
+          <file file_name="../../ess/machine/stm32f1/startup.c" />
+          <file file_name="../../ess/machine/stm32f1/vectors.s" />
+        </folder>
+      </folder>
+      <folder Name="support">
+        <folder Name="stm32f1">
+          <file file_name="../../ess/support/stm32f1/gpio.c" />
+          <file file_name="../../ess/support/stm32f1/usart.c" />
+          <file file_name="../../ess/support/stm32f1/cpu.c" />
+          <file file_name="../../ess/support/stm32f1/i2c.c" />
+          <file file_name="../../ess/support/stm32f1/timer.c" />
+        </folder>
+        <folder Name="stdlib">
+          <file file_name="../../ess/support/stdlib/malloc.c" />
+          <file file_name="../../ess/support/stdlib/stdio.c" />
+          <file file_name="../../ess/support/stdlib/stdlib.c" />
+          <file file_name="../../ess/support/stdlib/string.c" />
+        </folder>
+        <folder Name="misc">
+          <file file_name="../../ess/support/misc/terminal.c" />
+          <file file_name="../../ess/support/misc/eeprom.c" />
+        </folder>
+      </folder>
+      <file file_name="board_stm32f1.c" />
+      <folder Name="driver">
+        <folder Name="io">
+          <file file_name="../../ess/driver/io/uart_device.c" />
+        </folder>
+        <folder Name="meta">
+          <file file_name="../../ess/driver/meta/config.c" />
+        </folder>
+      </folder>
+      <file file_name="main_f1.c" />
+    </folder>
+    <folder Name="System Files" />
+    <folder Name="CMSIS Files">
+      <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.c" />
+      <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.h" />
+    </folder>
+    <configuration
+      Name="PixHawk F103C8"
+      Target="STM32F103C8"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_fpu_type="None"
+      arm_simulator_memory_simulation_parameter="STM32F103C8;0x10000;0x5000"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F103_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F103C8_MemoryMap.xml"
+      macros="DeviceVectorsFile=STM32F103xB.vec" />
+    <configuration
+      Name="PixHawk F100C8"
+      Target="STM32F100C8"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_fpu_type="None"
+      arm_simulator_memory_simulation_parameter="STM32F100C8;0x10000;0x2000"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F100_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F100C8_MemoryMap.xml"
+      macros="DeviceVectorsFile=STM32F100xB.vec" />
+  </project>
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_optimization_level="None"
+    hidden="Yes" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 1"
+    gcc_optimization_level="Level 1"
+    hidden="Yes" />
+  <configuration
+    Name="Naze32r5"
+    c_preprocessor_definitions="BOARD_NAZE32=5;HSE_VALUE=12000000UL;PLL_VALUE=6;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS;EEPROM_I2C_MODULE=1"
+    hidden="Yes" />
+  <configuration
+    Name="Naze32r5 Debug"
+    inherited_configurations="Debug;Naze32r5;THUMB;Flash" />
+  <configuration
+    Name="Naze32r5 Release"
+    inherited_configurations="Naze32r5;Release;THUMB;Flash" />
+  <configuration
+    Name="PixHawk F103C8"
+    c_preprocessor_definitions="BOARD_PIXHAWK;HSE_VALUE=24000000UL;PLL_VALUE=2;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="PixHawk F103C8 Debug"
+    inherited_configurations="Debug;PixHawk F103C8;THUMB;Flash" />
+  <configuration
+    Name="PixHawk F103C8 Release"
+    inherited_configurations="PixHawk F103C8;Release;THUMB;Flash" />
+  <configuration
+    Name="Common"
+    c_preprocessor_definitions="STDOUT_TIMEOUT=100" />
+  <configuration Name="Flash" hidden="Yes" />
+  <configuration
+    Name="PixHawk F100C8"
+    c_preprocessor_definitions="BOARD_PIXHAWK;HSE_VALUE=24000000UL;PLL_VALUE=2;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="PixHawk F100C8 Debug"
+    inherited_configurations="Debug;Flash;PixHawk F100C8;THUMB" />
+  <configuration
+    Name="PixHawk F100C8 Release"
+    inherited_configurations="Flash;PixHawk F100C8;Release;THUMB" />
+</solution>
