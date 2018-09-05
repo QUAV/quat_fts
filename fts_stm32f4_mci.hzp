@@ -20,8 +20,8 @@
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       arm_target_restrict_memory_accesses="No"
-      build_intermediate_directory=".output/$(Configuration)"
-      build_output_directory=".output/$(Configuration)"
+      build_intermediate_directory="$(HomeDir)/Temp/$(ProjectName)/$(Configuration)"
+      build_output_directory="$(HomeDir)/Temp/$(ProjectName)/$(Configuration)"
       c_only_additional_options="-fms-extensions"
       c_system_include_directories="$(TargetsDir)/STM32/include;$(PackagesDir)/CMSIS_4/CMSIS/Include"
       c_user_include_directories=".;$(EssDir);$(EssDir)/include;$(EssDir)/driver"
@@ -137,17 +137,6 @@
             <file file_name="../../ess/support/fs/fatfs/fat_handler.c" />
             <file file_name="../../ess/support/fs/fatfs/mbr.c" />
           </folder>
-        </folder>
-        <folder Name="gfx">
-          <file file_name="../../ess/support/gfx/fb.c" />
-          <file file_name="../../ess/support/gfx/font.c" />
-          <file file_name="../../ess/support/gfx/gfx.c" />
-          <file file_name="../../ess/support/gfx/rgb16.c" />
-          <file file_name="../../ess/support/gfx/argb32.c" />
-          <folder Name="display">
-            <file file_name="../../ess/support/gfx/display/otm8009a.c" />
-          </folder>
-          <file file_name="../../ess/support/gfx/polygon.c" />
         </folder>
         <file file_name="../../ess/support/can_hal.c" />
       </folder>
