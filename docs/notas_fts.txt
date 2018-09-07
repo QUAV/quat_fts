@@ -1,0 +1,49 @@
+
+Micro: STM32F105RCT6
+
+Cristal 14.7456
+
+* Pinout
+
+ PD0_OSC_IN - 5 - Cristal
+
+ X PA0 - 14 - UART4TX -> destinado a activacion de emergencia del paraca
+ X PA1 - 15 - UART4RX
+  -> debia ser USAR2: PA2, PA3
+
+ PC6 - 37 - OK led G (out digital, opc pwm)
+ PC7 - 38 -    led B
+ PC8 - 39 -    led R
+
+ PA9  - 42 - UART1TX -> Pixhawk link
+ PA10 - 43 - UART1RX
+
+ PB0 - 26 - Fire2   OK -> out explosivo (step 2)
+ PB1 - 27 - Fire1      -> copia 
+
+ X PB4 - 56 - Detect 1  -> (in digital) resistencia 1 -> Por default esta como jtagm, requiere config. ALT como GPIO
+              MOVER A PB7, pin 59
+
+ PB5 - 57 - Detect 2    -> (in digital) resistencia 2
+
+ PB6 - 58 - ARMED    -> out (armar carga step 1)
+
+ PA11 - 44 - CAN1RX OK
+ PA12 - 45 - CAN1TX
+
+
+ PA8  - 41 - PPM (TIM1 CH1) -> in info servos, necesario decodificar! consultar problemas de trans. con Miguel
+                        destinado a activacion de emergencia del paraca
+                        EJEMPLO en samples de stm32f1
+                        Se conf. en input pull in, no necesita alt. func.
+                        Necesita un pin TIMx_CHx, esperemos que el TIM1 no se necesario para otra cosa
+
+
+ 
+
+ 
+ PB12 -33 - CAN2 RX OK -> alt. como CAN2
+ PB13 -34 - CAN2 TX
+
+
+
