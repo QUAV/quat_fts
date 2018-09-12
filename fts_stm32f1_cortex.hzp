@@ -142,6 +142,17 @@
       debug_register_definition_file="$(TargetsDir)/STM32/STM32F100_Peripherals.xml"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32F100C8_MemoryMap.xml"
       macros="DeviceVectorsFile=STM32F100xB.vec" />
+    <configuration
+      Name="FTS_F105_Cortex"
+      Target="STM32F105RC"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_fpu_type="None"
+      arm_simulator_memory_simulation_parameter="STM32F105RC;0x40000;0x10000"
+      arm_target_connect_with_reset="No"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F105xC.vec"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F105RC_MemoryMap.xml"
+      macros="DeviceVectorsFile=STM32F105xC.vec" />
   </project>
   <configuration
     Name="THUMB"
@@ -197,6 +208,10 @@
     Name="PixHawk F100C8 Release"
     inherited_configurations="Flash;PixHawk F100C8;Release;THUMB" />
   <configuration
-    Name="FTS_cortex"
-    inherited_configurations="Debug;THUMB;PixHawk F100C8" />
+    Name="FTS_F105_Cortex"
+    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=14745600UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="FTS_F105_Cortex_Debug"
+    inherited_configurations="FTS_F105_Cortex;Debug;THUMB" />
 </solution>

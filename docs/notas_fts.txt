@@ -1,7 +1,9 @@
 
 Micro: STM32F105RCT6
 
-Cristal 14.7456
+Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
+
+
 
 * Pinout
 

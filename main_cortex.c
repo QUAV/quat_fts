@@ -45,6 +45,8 @@ static dispatcher_context_t _context;
 
 void main()
 {
+	while(1);
+
 	board_set_led(-1, LED_OFF);
 	printf("\n\nBoot!\n");
 //	persist_load();
