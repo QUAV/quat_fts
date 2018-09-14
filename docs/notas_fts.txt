@@ -21,7 +21,7 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
  PA10 - 43 - UART1RX
 
  PB0 - 26 - Fire2   OK -> out explosivo (step 2)
- PB1 - 27 - Fire1      -> copia 
+ PB1 - 27 - Fire1      -> copia
 
  X PB4 - 56 - Detect 1  -> (in digital) resistencia 1 -> Por default esta como jtagm, requiere config. ALT como GPIO
               MOVER A PB7, pin 59
@@ -41,11 +41,8 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
                         Necesita un pin TIMx_CHx, esperemos que el TIM1 no se necesario para otra cosa
 
 
- 
 
- 
+
+
  PB12 -33 - CAN2 RX OK -> alt. como CAN2
  PB13 -34 - CAN2 TX
-
-
-

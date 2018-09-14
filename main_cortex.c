@@ -45,10 +45,20 @@ static dispatcher_context_t _context;
 
 void main()
 {
-	while(1);
+	board_set_led(-1, 0); // switch off all leds
+	board_set_led(-1, LED_GREEN); // enabled
 
-	board_set_led(-1, LED_OFF);
+
 	printf("\n\nBoot!\n");
+
+	//board_enable_charges(true);
+	//printf("\nArmed\n");
+	//board_fire(true);
+	//printf("\nFIRE\n");
+	//volatile int i;for (i=0; i<2000000; i++);
+	board_fire(false);
+	board_enable_charges(false);
+
 //	persist_load();
 
 //	power_initialize();
@@ -164,7 +174,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 			break;
 
 		case MAV_STATE_ACTIVE:				
-			_led_flash(LED_RED | LED_GREEN, 500);
+			_led_flash(LED_RED | LED_GREEN, 500); 
 
 			if (_state == MAV_STATE_STANDBY)
 			{

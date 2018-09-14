@@ -6,6 +6,8 @@
 #include <support/i2c_hal.h>
 #include <support/pwm_hal.h>
 
+#define LED_INVERSION_MASK (LED_RGB)
+
 void __board_initialize()
 {
 	gpio_pin_config(PC6, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led red
@@ -23,8 +25,8 @@ void __board_initialize()
 	gpio_pin_config(PA10, GPIO_MODE_INPUT);								//??  USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
 	#define IO_UART_MODULE 1	// USART
 
-	gpio_pin_config(PB0, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN);	// Fire 1
-	gpio_pin_config(PB1, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN);	// Fire 2
+	gpio_pin_config(PB0, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 1
+	gpio_pin_config(PB1, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 2
 	#define FIRE_1_PIN PB0
 	#define FIRE_2_PIN PB1
 
@@ -32,8 +34,8 @@ void __board_initialize()
 	gpio_pin_config(PB5, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 2
 	#define  DETECT_PIN PB5	
 
-	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN);	// ARMED
-	#define  ARMED_PIN PB6	
+	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED
+	#define  ARMED_PIN PB6
 
 	gpio_pin_config(PA11, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 RX REMAP 0
 	gpio_pin_config(PA12, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 TX REMAP 0
@@ -51,6 +53,9 @@ void __board_initialize()
 
 void board_set_led(led_mask_t mask, led_mask_t value)
 {
+#ifdef LED_INVERSION_MASK
+	value ^= LED_INVERSION_MASK;
+#endif
 	if (mask & LED_RED)
 		hal_gpio_pin_set(LED_R_PIN, value & LED_RED);
 
@@ -59,6 +64,17 @@ void board_set_led(led_mask_t mask, led_mask_t value)
 
 	if (mask & LED_BLUE)
 		hal_gpio_pin_set(LED_B_PIN, value & LED_BLUE);
+}
+
+void board_enable_charges(bool enable)
+{
+	hal_gpio_pin_set(ARMED_PIN, enable);
+}
+
+void board_fire(bool fire)
+{
+	hal_gpio_pin_set(FIRE_1_PIN, fire);
+	hal_gpio_pin_set(FIRE_2_PIN, fire);
 }
 
 

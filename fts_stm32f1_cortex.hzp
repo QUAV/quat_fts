@@ -209,7 +209,7 @@
     inherited_configurations="Flash;PixHawk F100C8;Release;THUMB" />
   <configuration
     Name="FTS_F105_Cortex"
-    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=14745600UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
+    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=12000000UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
     hidden="Yes" />
   <configuration
     Name="FTS_F105_Cortex_Debug"
