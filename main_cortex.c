@@ -44,7 +44,7 @@ static void _fire_handler(dispatcher_context_t *context, dispatcher_t *dispatche
 static dispatcher_context_t _context;
 
 void main()
-{
+ {
 	board_set_led(-1, 0); // switch off all leds
 	board_set_led(-1, LED_GREEN); // enabled
 
@@ -56,8 +56,8 @@ void main()
 	//board_fire(true);
 	//printf("\nFIRE\n");
 	//volatile int i;for (i=0; i<2000000; i++);
-	board_fire(false);
-	board_enable_charges(false);
+	//board_fire(false);
+	//board_enable_charges(false);
 
 //	persist_load();
 
@@ -70,7 +70,7 @@ void main()
 	usb_comms_initialize();
 #endif
 //	can_comms_initialize();
-	output_initialize(&_context);
+//	output_initialize(&_context);
 
 //	board_init_pwm(&_context, _pwm_handler);
 
@@ -166,7 +166,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 #endif
 					dispatcher_add(&_context, &_mavlink_dispatcher, 100);	
 
-					output_disarm();
+					//output_disarm();
 					_armed = false;
 					_state = MAV_STATE_STANDBY;
 				}
@@ -178,7 +178,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 
 			if (_state == MAV_STATE_STANDBY)
 			{
-				output_rearm();
+				//output_rearm();
 				_armed = true;
 			}
 
@@ -265,7 +265,7 @@ static void _fire()
 
 	printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
 	_led_flash(LED_BLUE, 500);
-	output_fire();
+	//output_fire();
 }
 
 static led_mask_t _leds_on = 0;

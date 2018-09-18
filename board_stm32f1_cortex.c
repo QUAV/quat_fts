@@ -17,13 +17,13 @@ void __board_initialize()
 	gpio_pin_config(PC8, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led blue
 	#define LED_B_PIN PC8
 
-	//gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
-	//gpio_pin_config(PA10, GPIO_MODE_INPUT);								//??  USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
-	#define MAVLINK_UART_MODULE 1	// USART
+	gpio_pin_config(PA2, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART4_TX REMAP 0	(SBUS) NOTE: inverted signal
+	gpio_pin_config(PA3, GPIO_MODE_INPUT);								// USART4_Rx REMAP 0	(SBUS) NOTE: inverted signal
+	#define MAVLINK_UART_MODULE 3	// USART
 
+	// Debug UART
 	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
-	gpio_pin_config(PA10, GPIO_MODE_INPUT);								//??  USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
-	#define IO_UART_MODULE 1	// USART
+	gpio_pin_config(PA10, GPIO_MODE_INPUT);								// USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
 
 	gpio_pin_config(PB0, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 1
 	gpio_pin_config(PB1, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 2
@@ -82,20 +82,23 @@ void board_fire(bool fire)
 
 void board_mavlink_init(dispatcher_context_t *context, uart_control_block_t *cb)
 {
-	//uart_initialize(MAVLINK_UART_MODULE, cb);
+	uart_initialize(MAVLINK_UART_MODULE, cb);
 }
 
 int board_mavlink_read(unsigned char *buffer, unsigned long length)
 {
-	return 0; //return uart_read(MAVLINK_UART_MODULE, buffer, length);
+	return uart_read(MAVLINK_UART_MODULE, buffer, length);
 }
 
 int board_mavlink_write(unsigned char *buffer, unsigned long length)
 {
-	/*int done = uart_write(MAVLINK_UART_MODULE, buffer, length);
+	int done = uart_write(MAVLINK_UART_MODULE, buffer, length);
+	/*if (done != length)
+	{
+		ASSERT(0, KERNEL_ERROR_KERNEL_PANIC);
+	}*/
 	ASSERT(done == length, KERNEL_ERROR_KERNEL_PANIC);
-	return done;*/
-	return 1;
+	return done;
 }
 
 #endif
@@ -118,27 +121,6 @@ void board_init_pwm(dispatcher_context_t *context, dispatcher_callback_t callbac
 	dispatcher_create(&dispatcher, &_match_event, callback, nullptr);
 	timer_initialize(PWM_IN_TIMER_MODULE, 1000000UL, _cap_handler, TIMER_CTRLF_NONE);
 	timer_capture_setup(PWM_IN_TIMER_MODULE, PWM_IN_TIMER_CHANNEL, TIMER_CAPF_INTERRUPT | TIMER_CAPF_RISE | TIMER_CAPF_FALL);
-}
-
-#endif
-
-#ifdef IO_UART_MODULE
-
-void board_comms_init(dispatcher_context_t *context, uart_control_block_t *cb)
-{
-	uart_initialize(IO_UART_MODULE, cb);
-}
-
-int board_comms_read(unsigned char *buffer, unsigned long length)
-{
-	return uart_read(IO_UART_MODULE, buffer, length);
-}
-
-int board_comms_write(unsigned char *buffer, unsigned long length)
-{
-	int done = uart_write(IO_UART_MODULE, buffer, length);
-	ASSERT(done == length, KERNEL_ERROR_KERNEL_PANIC);
-	return done;
 }
 
 #endif

@@ -115,7 +115,6 @@
       <file file_name="board_stm32f1_cortex.c" />
       <file file_name="main_cortex.c" />
       <file file_name="mavlink.c" />
-      <file file_name="output_io.c" />
     </folder>
     <folder Name="System Files" />
     <folder Name="CMSIS Files">
