@@ -17,9 +17,9 @@ void __board_initialize()
 	gpio_pin_config(PC8, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led blue
 	#define LED_B_PIN PC8
 
-	gpio_pin_config(PA2, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART4_TX REMAP 0	(SBUS) NOTE: inverted signal
-	gpio_pin_config(PA3, GPIO_MODE_INPUT);								// USART4_Rx REMAP 0	(SBUS) NOTE: inverted signal
-	#define MAVLINK_UART_MODULE 3	// USART
+	gpio_pin_config(PA2, GPIO_MODE_ALT_FUNC | GPIO_MODEF_MED_SPEED);	// USART2_TX REMAP 0	(SBUS) NOTE: inverted signal
+	gpio_pin_config(PA3, GPIO_MODE_INPUT);								// USART2_Rx REMAP 0	(SBUS) NOTE: inverted signal
+	#define MAVLINK_UART_MODULE 1	// USART
 
 	// Debug UART
 	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
@@ -30,9 +30,10 @@ void __board_initialize()
 	#define FIRE_1_PIN PB0
 	#define FIRE_2_PIN PB1
 
-	//gpio_pin_config(PB4, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 1 CAMBIAR DE PIN
+	gpio_pin_config(PB7, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 1 
 	gpio_pin_config(PB5, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 2
-	#define  DETECT_PIN PB5	
+	#define  DETECT_PIN_1 PB7	
+	#define  DETECT_PIN_2 PB5	
 
 	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED
 	#define  ARMED_PIN PB6
@@ -93,10 +94,6 @@ int board_mavlink_read(unsigned char *buffer, unsigned long length)
 int board_mavlink_write(unsigned char *buffer, unsigned long length)
 {
 	int done = uart_write(MAVLINK_UART_MODULE, buffer, length);
-	/*if (done != length)
-	{
-		ASSERT(0, KERNEL_ERROR_KERNEL_PANIC);
-	}*/
 	ASSERT(done == length, KERNEL_ERROR_KERNEL_PANIC);
 	return done;
 }
