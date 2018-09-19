@@ -107,12 +107,15 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 		case MAVLINK_MSG_ID_SCALED_IMU2:
 			printf("imu2\n");
 			break;
+		case MAVLINK_MSG_ID_HIGHRES_IMU:
+			printf("hires imu\n");
+			break;
 		case MAVLINK_MSG_ID_COMMAND_ACK:
 			ack = (mavlink_msg_cmd_ack_t *)msg->Payload;
 			printf("ack cmd %d -> %d\n", ack->CmdId, ack->Result);
 			break;
 		default:
-			printf("\n");
+			printf("id %d\n", hdr->MsgId);
 			break;
 	}
 

@@ -1,8 +1,16 @@
 
+Cambios placa:
+- Cristal a 12 Mhz
+- Invertir LED
+- Detect 2 a PB7, pin 59
+- UART4 a USART2 -> PA2, PA3, pines 25, 29
+- Diodos alreves
+
+
+
 Micro: STM32F105RCT6
 
 Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
-
 
 
 * Pinout
@@ -11,7 +19,7 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
 
  X PA0 - 14 - UART4TX -> destinado a activacion de emergencia del paraca
  X PA1 - 15 - UART4RX
-  -> debia ser USAR2: PA2, PA3
+  -> debia ser USART2: PA2, PA3
 
  PC6 - 37 - OK led G (out digital, opc pwm)
  PC7 - 38 -    led B

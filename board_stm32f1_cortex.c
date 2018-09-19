@@ -67,6 +67,14 @@ void board_set_led(led_mask_t mask, led_mask_t value)
 		hal_gpio_pin_set(LED_B_PIN, value & LED_BLUE);
 }
 
+bool board_detect_lines (unsigned line)
+{
+	if (line > 2) 
+		return false;
+
+	return !((line == 0) ? hal_gpio_pin(DETECT_PIN_1) : hal_gpio_pin(DETECT_PIN_2));
+}
+
 void board_enable_charges(bool enable)
 {
 	hal_gpio_pin_set(ARMED_PIN, enable);
@@ -96,28 +104,6 @@ int board_mavlink_write(unsigned char *buffer, unsigned long length)
 	int done = uart_write(MAVLINK_UART_MODULE, buffer, length);
 	ASSERT(done == length, KERNEL_ERROR_KERNEL_PANIC);
 	return done;
-}
-
-#endif
-
-#ifdef PWM_IN_TIMER_MODULE
-
-static event_t _match_event;
-
-static void _cap_handler(unsigned module, unsigned channel)
-{
-	// TODO
-	event_set(&_match_event);
-}
-
-void board_init_pwm(dispatcher_context_t *context, dispatcher_callback_t callback)
-{
-	static dispatcher_t dispatcher;
-
-	event_create(&_match_event, EVENTF_AUTORESET);
-	dispatcher_create(&dispatcher, &_match_event, callback, nullptr);
-	timer_initialize(PWM_IN_TIMER_MODULE, 1000000UL, _cap_handler, TIMER_CTRLF_NONE);
-	timer_capture_setup(PWM_IN_TIMER_MODULE, PWM_IN_TIMER_CHANNEL, TIMER_CAPF_INTERRUPT | TIMER_CAPF_RISE | TIMER_CAPF_FALL);
 }
 
 #endif

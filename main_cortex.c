@@ -35,7 +35,7 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
-static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
+//static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _fire();
 
@@ -48,7 +48,6 @@ void main()
 	board_set_led(-1, 0); // switch off all leds
 	board_set_led(-1, LED_GREEN); // enabled
 
-
 	printf("\n\nBoot!\n");
 
 	//board_enable_charges(true);
@@ -59,6 +58,8 @@ void main()
 	//board_fire(false);
 	//board_enable_charges(false);
 
+	printf ("Detect lines: %d %d\n", board_detect_lines (0),  board_detect_lines (1));
+
 //	persist_load();
 
 //	power_initialize();
@@ -66,11 +67,7 @@ void main()
 	dispatcher_create(&_fire_dispatcher, nullptr, _fire_handler, nullptr);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
 
-#ifndef DISABLE_USB_COMMS
-	usb_comms_initialize();
-#endif
 //	can_comms_initialize();
-//	output_initialize(&_context);
 
 //	board_init_pwm(&_context, _pwm_handler);
 
@@ -82,10 +79,12 @@ void main()
 	mavlink_add_handler(&heartbeat_handler);
 	mavlink_handler_t att_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_ATTITUDE, .Func = _attitude };
 	mavlink_add_handler(&att_handler);
-	mavlink_handler_t imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU, .Func = _imu };
-	mavlink_add_handler(&imu_handler);
+	//mavlink_handler_t imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU, .Func = _imu };
+	//mavlink_add_handler(&imu_handler);
 	mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
 	mavlink_add_handler(&imu2_handler);
+
+	//thread_sleep(1000);
 
 	while(1)
 	{
@@ -94,10 +93,12 @@ void main()
 	}
 }
 
+/*
 static void _pwm_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	// not implemented
 }
+*/
 
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
@@ -192,7 +193,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 				_led_flash(LED_RED | LED_GREEN, 50);	
 			else
 				_led_flash(LED_GREEN, 50);	
-
+ 
 			_state = MAV_STATE_EMERGENCY;
 			break;
 
@@ -227,11 +228,12 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
-
+/*
 static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
 	// TODO
 }
+*/
 
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
@@ -261,6 +263,7 @@ static void _fire()
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
 		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, 
 		.Param1 = 1.0f };
+	// Tell fligth controller to stop motor inmediately 
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
 
 	printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");

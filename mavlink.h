@@ -100,6 +100,8 @@ typedef enum
     MAVLINK_MSG_ID_COMMAND_LONG = 76,
     MAVLINK_MSG_ID_COMMAND_ACK = 77,
 	// [...]
+    MAVLINK_MSG_ID_HIGHRES_IMU = 105,
+   	// [...]
 	MAVLINK_MSG_ID_SCALED_IMU2 = 116,
 	MAVLINK_MSG_ID_AHRS2 = 178,	// NOTE: arducopter specific
 } mavlink_msg_id_t;

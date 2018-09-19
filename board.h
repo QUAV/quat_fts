@@ -50,6 +50,8 @@ int board_comms_write(unsigned char *buffer, unsigned long length);
 void board_set_led(led_mask_t mask, led_mask_t value);
 void board_set_output(output_mask_t mask, output_mask_t value);
 
+bool board_detect_lines (unsigned line);
+
 // NOTE: for board with local charge output
 void board_enable_charges(bool enable);
 void board_fire(bool fire);
