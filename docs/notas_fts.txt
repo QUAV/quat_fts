@@ -4,7 +4,8 @@ Cambios placa:
 - Invertir LED
 - Detect 2 a PB7, pin 59
 - UART4 a USART2 -> PA2, PA3, pines 25, 29
-- Diodos alreves
+- Arreglar diodos del reves
+- Añadir sirena, 12v 1200 miliamps en PB10, pin 29
 
 
 

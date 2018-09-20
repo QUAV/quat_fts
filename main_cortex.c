@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 static mavlink_state_t _state = MAV_STATE_UNINIT;
+static bool _detonator = false;
 static bool _armed = false;
 
 static struct {
@@ -38,6 +39,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 //static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _fire();
+static void _request_motor_disabling();
 
 static dispatcher_t _fire_dispatcher;
 static void _fire_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
@@ -50,15 +52,10 @@ void main()
 
 	printf("\n\nBoot!\n");
 
-	//board_enable_charges(true);
-	//printf("\nArmed\n");
-	//board_fire(true);
-	//printf("\nFIRE\n");
-	//volatile int i;for (i=0; i<2000000; i++);
-	//board_fire(false);
-	//board_enable_charges(false);
-
-	printf ("Detect lines: %d %d\n", board_detect_lines (0),  board_detect_lines (1));
+	_detonator = board_detect_lines (0) && board_detect_lines (1);
+	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
+    if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
+		_request_motor_disabling ();
 
 //	persist_load();
 
@@ -167,7 +164,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 #endif
 					dispatcher_add(&_context, &_mavlink_dispatcher, 100);	
 
-					//output_disarm();
+                    board_enable_charges(false);
 					_armed = false;
 					_state = MAV_STATE_STANDBY;
 				}
@@ -179,7 +176,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 
 			if (_state == MAV_STATE_STANDBY)
 			{
-				//output_rearm();
+                board_enable_charges(true);
 				_armed = true;
 			}
 
@@ -258,17 +255,25 @@ static void _fire_handler(dispatcher_context_t *context, dispatcher_t *dispatche
 	_fire();
 }
 
-static void _fire()
+static void _request_motor_disabling()
 {
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
 		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, 
 		.Param1 = 1.0f };
 	// Tell fligth controller to stop motor inmediately 
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
+}
 
+
+static void _fire()
+{
+	_request_motor_disabling();
 	printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
 	_led_flash(LED_BLUE, 500);
-	//output_fire();
+	
+	board_fire(true);
+	thread_sleep (200);
+	board_fire(false);
 }
 
 static led_mask_t _leds_on = 0;
