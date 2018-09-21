@@ -7,12 +7,27 @@
 #include "output.h"
 #include <kernel/dispatcher.h>
 #include <kernel/panic.h>
+#include <support/stm32f1/wdt.h>
 #include <meta/config.h>
 #include <stdio.h>
+
+enum
+{
+	FIRED_NOT = 1,
+	FIRED_DEADMAN = 2,
+	FIRED_FLIGHT_CONTROLLER = 3,
+	FIRED_BAD_ATTITUDE = 1,
+	FIRED_ATTITUDE_ROLL = 1,
+	FIRED_FALL = 1,
+};
+
 
 static mavlink_state_t _state = MAV_STATE_UNINIT;
 static bool _detonator = false;
 static bool _armed = false;
+static bool _already_fired = false;
+static int _fire_cause = FIRED_NOT;
+
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
@@ -27,8 +42,6 @@ static dispatcher_t _led_off_dispatcher;
 static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static void _led_flash(led_mask_t mask, unsigned time);
 
-static void _pwm_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
-
 static dispatcher_t _mavlink_dispatcher;
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_t _deadman_dispatcher;
@@ -36,19 +49,19 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
-//static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _fire();
 static void _request_motor_disabling();
 
-static dispatcher_t _fire_dispatcher;
-static void _fire_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_context_t _context;
 
 void main()
- {
+{
 	board_set_led(-1, 0); // switch off all leds
-	board_set_led(-1, LED_GREEN); // enabled
+	//board_set_led(-1, LED_GREEN); // enabled
+	board_set_led(-1, LED_GREEN | LED_BLUE | LED_RED); 
+	thread_sleep(100);
+	board_set_led(-1, 0); 
 
 	printf("\n\nBoot!\n");
 
@@ -57,16 +70,8 @@ void main()
     if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
 		_request_motor_disabling ();
 
-//	persist_load();
-
-//	power_initialize();
 	dispatcher_context_create(&_context);
-	dispatcher_create(&_fire_dispatcher, nullptr, _fire_handler, nullptr);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
-
-//	can_comms_initialize();
-
-//	board_init_pwm(&_context, _pwm_handler);
 
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
@@ -76,26 +81,18 @@ void main()
 	mavlink_add_handler(&heartbeat_handler);
 	mavlink_handler_t att_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_ATTITUDE, .Func = _attitude };
 	mavlink_add_handler(&att_handler);
-	//mavlink_handler_t imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU, .Func = _imu };
-	//mavlink_add_handler(&imu_handler);
 	mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
 	mavlink_add_handler(&imu2_handler);
 
-	//thread_sleep(1000);
+	//wdt_initialize(500);
 
 	while(1)
 	{
+		//wdt_reload();
 		if (!dispatcher_dispatch(&_context, 1500))
 			_led_flash(LED_RED, 300);
 	}
 }
-
-/*
-static void _pwm_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
-{
-	// not implemented
-}
-*/
 
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
@@ -122,8 +119,9 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	printf("DEADMAN TIMEOUT\n");
+	_fire_cause = FIRED_DEADMAN;
 	_fire();
+	printf("DEADMAN TIMEOUT\n");
 }
 
 static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
@@ -195,7 +193,9 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 			break;
 
 		case MAV_STATE_FLIGHT_TERMINATION:	// NOTE: arducopter NEVER sends this state
+			_fire_cause = FIRED_FLIGHT_CONTROLLER;
 			_fire();
+			printf("FLIGHT CONTROLLER TERMINATION\n");
 			_state = state;
 			break;
 
@@ -210,27 +210,32 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	static unsigned warn_time = 0;
 	mavlink_msg_attitude_h *data = (mavlink_msg_attitude_h *)msg->Payload;
 
-	bool warn_ready = data->Pitch > _conf.warn_angle.pitch_min && data->Pitch < _conf.warn_angle.pitch_max &&
-		data->Roll > _conf.warn_angle.roll_min && data->Roll < _conf.warn_angle.roll_max;
+	bool warn_ready = data->Pitch > _conf.warn_angle.pitch_min && 
+					  data->Pitch < _conf.warn_angle.pitch_max &&
+					  data->Roll > _conf.warn_angle.roll_min && 
+					  data->Roll < _conf.warn_angle.roll_max;
+
 	warn_time = warn_ready ? 0 : (warn_time + 100);
 
-	bool panic_ready = data->Pitch > _conf.panic_angle.pitch_min && data->Pitch < _conf.panic_angle.pitch_max &&
-		data->Roll > _conf.panic_angle.roll_min && data->Roll < _conf.panic_angle.roll_max;
+	bool panic_ready =  data->Pitch > _conf.panic_angle.pitch_min && 
+						data->Pitch < _conf.panic_angle.pitch_max &&
+						data->Roll > _conf.panic_angle.roll_min &&
+						data->Roll < _conf.panic_angle.roll_max;
 
 	if (!panic_ready || warn_time >= _conf.warn_to_panic_ms)
+	{
+		_fire_cause = FIRED_BAD_ATTITUDE;
+		if (!panic_ready)
+			_fire_cause = FIRED_ATTITUDE_ROLL;
 		_fire();
+	}
 
 	if (!warn_ready)
 		_led_flash(LED_AMBER, 500);
 
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
-/*
-static void _imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
-{
-	// TODO
-}
-*/
+
 
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
@@ -244,15 +249,14 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 	bool acc_ready = acc > 300;
 	fall_time = acc_ready ? 0 : (fall_time + 100);
 	if (fall_time > _conf.warn_to_panic_ms)
+	{
+		_fire_cause = FIRED_FALL;
 		_fire();
+       	printf("FALLING\n");
+	}
 
 	if (!acc_ready)
 		_led_flash(LED_AMBER, 500);
-}
-
-static void _fire_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
-{
-	_fire();
 }
 
 static void _request_motor_disabling()
@@ -267,13 +271,21 @@ static void _request_motor_disabling()
 
 static void _fire()
 {
-	_request_motor_disabling();
-	printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
-	_led_flash(LED_BLUE, 500);
+	if (_already_fired)
+	{
+		printf("new fire condition, already fired\n");
+	}
+	else
+	{
+		_request_motor_disabling();
+		printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
+		_led_flash(LED_BLUE, 500);
 	
-	board_fire(true);
-	thread_sleep (200);
-	board_fire(false);
+		board_fire(true);
+		thread_sleep (300);
+		board_fire(false);
+		_already_fired = true;
+	}
 }
 
 static led_mask_t _leds_on = 0;
