@@ -116,6 +116,8 @@
       <file file_name="board_stm32f1_cortex.c" />
       <file file_name="main_cortex.c" />
       <file file_name="mavlink.c" />
+      <file file_name="datalog.c" />
+      <file file_name="stm32f10x_flash.c" />
     </folder>
     <folder Name="System Files" />
     <folder Name="CMSIS Files">
@@ -153,6 +155,7 @@
       debug_register_definition_file="$(TargetsDir)/STM32/STM32F105xC.vec"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32F105RC_MemoryMap.xml"
       macros="DeviceVectorsFile=STM32F105xC.vec" />
+    <configuration Name="FTS_F105_Cortex_Debug" linker_output_format="bin" />
   </project>
   <configuration
     Name="THUMB"

@@ -1,4 +1,5 @@
 #include "mavlink.h"
+#include "datalog.h"
 #include "board.h"
 #include "stdio.h"
 #include <kernel/mutex.h>
@@ -78,7 +79,7 @@ static void _heartbeat_dispatch(dispatcher_context_t *context, dispatcher_t *dis
 	_started = true;
 	printf("<- heartbeat\n");
 
-	dispatcher_add(context, dispatcher, 10000);
+	dispatcher_add(context, dispatcher, 10000); 
 }
 
 static void _do_msg(const mavlink_msg_t *msg, unsigned length)
@@ -88,9 +89,10 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 	const mavlink_msg_hdr_t *hdr = &msg->Hdr;
 	printf("%02x %d:%d [%d] ", hdr->Seq, hdr->SysId, hdr->CompId, hdr->MsgId);
 
+	datalog_add_event ((unsigned char*)msg, length );
+
 	mavlink_msg_heartbeat_t *beat;
 	mavlink_msg_cmd_ack_t *ack;
-
 	// FIXME: check hdr seq, sender, etc.
 	switch(hdr->MsgId)
 	{

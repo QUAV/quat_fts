@@ -4,22 +4,16 @@
 //#include "power.h"
 #include "board.h"
 #include "mavlink.h"
-#include "output.h"
 #include <kernel/dispatcher.h>
 #include <kernel/panic.h>
 #include <support/stm32f1/wdt.h>
 #include <meta/config.h>
 #include <stdio.h>
 
-enum
-{
-	FIRED_NOT = 1,
-	FIRED_DEADMAN = 2,
-	FIRED_FLIGHT_CONTROLLER = 3,
-	FIRED_BAD_ATTITUDE = 1,
-	FIRED_ATTITUDE_ROLL = 1,
-	FIRED_FALL = 1,
-};
+#include "datalog.h"
+
+//#define ENABLE_WATCHDOG
+
 
 
 static mavlink_state_t _state = MAV_STATE_UNINIT;
@@ -58,10 +52,11 @@ static dispatcher_context_t _context;
 void main()
 {
 	board_set_led(-1, 0); // switch off all leds
-	//board_set_led(-1, LED_GREEN); // enabled
-	board_set_led(-1, LED_GREEN | LED_BLUE | LED_RED); 
-	thread_sleep(100);
-	board_set_led(-1, 0); 
+	board_set_led(-1, LED_GREEN); // enabled
+
+	//board_set_led(-1, LED_GREEN | LED_BLUE | LED_RED); 
+	//thread_sleep(100);
+	//board_set_led(-1, 0); 
 
 	printf("\n\nBoot!\n");
 
@@ -84,11 +79,15 @@ void main()
 	mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
 	mavlink_add_handler(&imu2_handler);
 
-	//wdt_initialize(500);
+#ifdef ENABLE_WATCHDOG
+	wdt_initialize(100);
+#endif
 
 	while(1)
 	{
-		//wdt_reload();
+#ifdef ENABLE_WATCHDOG
+		wdt_reload();
+#endif
 		if (!dispatcher_dispatch(&_context, 1500))
 			_led_flash(LED_RED, 300);
 	}
@@ -264,7 +263,7 @@ static void _request_motor_disabling()
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
 		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, 
 		.Param1 = 1.0f };
-	// Tell fligth controller to stop motor inmediately 
+	// Tell flight controller to stop motor inmediately 
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
 }
 
@@ -282,7 +281,9 @@ static void _fire()
 		_led_flash(LED_BLUE, 500);
 	
 		board_fire(true);
-		thread_sleep (300);
+		thread_sleep (200);	//Trigger time, let's do nothing meanwhile
+
+		datalog_flash(_fire_cause);
 		board_fire(false);
 		_already_fired = true;
 	}
@@ -310,3 +311,4 @@ static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
 	board_set_led(_leds_on, 0);
 	_leds_on = 0;
 }
+ 
