@@ -93,7 +93,7 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 
 	mavlink_msg_heartbeat_t *beat;
 	mavlink_msg_cmd_ack_t *ack;
-    mavlink_msg_highres_imu_h* himu;
+    mavlink_msg_highres_imu_t* himu;
 	// FIXME: check hdr seq, sender, etc.
 	switch(hdr->MsgId)
 	{
@@ -111,7 +111,7 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 			printf("imu2\n");
 			break;
 		case MAVLINK_MSG_ID_HIGHRES_IMU:
-			himu = (mavlink_msg_highres_imu_h*)msg->Payload;
+			himu = (mavlink_msg_highres_imu_t*)msg->Payload;
 			printf("hires imu %d\n", (int)(himu->time_usec / 1000));
 			break;
 		case MAVLINK_MSG_ID_COMMAND_ACK:

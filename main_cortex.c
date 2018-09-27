@@ -36,6 +36,10 @@ static dispatcher_t _led_off_dispatcher;
 static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static void _led_flash(led_mask_t mask, unsigned time);
 
+static dispatcher_t _fire_off_dispatcher;
+static void _fire();
+static void _fire_off();
+
 static dispatcher_t _mavlink_dispatcher;
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_t _deadman_dispatcher;
@@ -45,7 +49,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 //static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
-static void _fire();
+
 static void _request_motor_disabling();
 
 
@@ -69,6 +73,7 @@ void main()
 
 	dispatcher_context_create(&_context);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
+	dispatcher_create(&_fire_off_dispatcher, nullptr, _fire_off, nullptr);
 
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
@@ -122,8 +127,11 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	_fire_cause = FIRED_DEADMAN;
-	_fire();
+	if (!_already_fired) 
+	{
+		_fire_cause = FIRED_DEADMAN;
+		_fire();
+	}
 	printf("DEADMAN TIMEOUT\n");
 }
 
@@ -196,8 +204,11 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 			break;
 
 		case MAV_STATE_FLIGHT_TERMINATION:	// NOTE: arducopter NEVER sends this state
-			_fire_cause = FIRED_FLIGHT_CONTROLLER;
-			_fire();
+			if (!_already_fired)
+			{
+				_fire_cause = FIRED_FLIGHT_CONTROLLER;
+				_fire();
+			}
 			printf("FLIGHT CONTROLLER TERMINATION\n");
 			_state = state;
 			break;
@@ -211,7 +222,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {	
 	static unsigned warn_time = 0;
-	mavlink_msg_attitude_h *data = (mavlink_msg_attitude_h *)msg->Payload;
+	mavlink_msg_attitude_t *data = (mavlink_msg_attitude_t *)msg->Payload;
 
 	bool warn_ready = data->Pitch > _conf.warn_angle.pitch_min && 
 					  data->Pitch < _conf.warn_angle.pitch_max &&
@@ -227,10 +238,13 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 	if (!panic_ready || warn_time >= _conf.warn_to_panic_ms)
 	{
-		_fire_cause = FIRED_BAD_ATTITUDE;
-		if (!panic_ready)
-			_fire_cause = FIRED_ATTITUDE_ROLL;
-		_fire();
+		if (!_already_fired)
+		{
+			_fire_cause = FIRED_BAD_ATTITUDE;
+			if (!panic_ready)
+				_fire_cause = FIRED_ATTITUDE_ROLL;
+			_fire();
+		}
 	}
 
 	if (!warn_ready)
@@ -244,7 +258,7 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 {
 	static unsigned fall_time = 0;
 
-	mavlink_msg_scaled_imu2_h *data = (mavlink_msg_scaled_imu2_h *)msg->Payload;
+	mavlink_msg_scaled_imu2_t *data = (mavlink_msg_scaled_imu2_t *)msg->Payload;
 	signed int acc = (((signed int)data->XAcc) * ((signed int)data->XAcc)) +
 		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
 		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
@@ -254,8 +268,11 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 	fall_time = acc_ready ? 0 : (fall_time + 100);
 	if (fall_time > _conf.warn_to_panic_ms)
 	{
-		_fire_cause = FIRED_FALL;
-		_fire();
+		if (!_already_fired)
+		{
+			_fire_cause = FIRED_FALL;
+			_fire();
+		}
        	printf("FALLING\n");
 	}
 
@@ -275,8 +292,11 @@ static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *
 	fall_time = acc_ready ? 0 : (fall_time + 100);
 	if (fall_time > _conf.warn_to_panic_ms)
 	{
-		_fire_cause = FIRED_FALL;
-		_fire();
+		if (!_already_fired)
+		{
+			_fire_cause = FIRED_FALL;
+			_fire();
+		}
        	printf("FALLING\n");
 	}
 
@@ -302,17 +322,23 @@ static void _fire()
 	}
 	else
 	{
+		datalog_recording (false);
 		_request_motor_disabling();
 		printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
 		_led_flash(LED_BLUE, 500);
 	
 		board_fire(true);
-		thread_sleep (200);	//Trigger time, let's do nothing meanwhile
+		_already_fired = true;
+
+		dispatcher_add(&_context, &_fire_off_dispatcher, 300);
 
 		datalog_flash(_fire_cause);
-		board_fire(false);
-		_already_fired = true;
 	}
+}
+
+static void _fire_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
+{
+	board_fire(false);
 }
 
 static led_mask_t _leds_on = 0;

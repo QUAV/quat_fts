@@ -7,6 +7,7 @@
 #include "stm32f10x_flash.h"
 #include <kernel/panic.h>
 
+
 // Page size: 2KB
 // 32KB area, size controlled by assert
 #define FLASH_RESERVE      (32768)
@@ -27,6 +28,8 @@ typedef struct
 	int start;
 	unsigned length;
 } datalog_entry_t;
+
+static bool _recording = true;
 
 typedef struct 
 {
@@ -104,19 +107,27 @@ void datalog_flash(fired_cause_t cause)
 	_flash_data_raw_save ((unsigned *)&_dl, sizeof(_dl));
 }
 
+void datalog_recording (bool enable)
+{
+	_recording = enable;
+} 
+
 void datalog_add_event(unsigned char* data, unsigned length)
 {
 	int i;
 	if (!_init)
 		_datalog_init ();
 
-	_dl.entries [_dl.curr_entry].start = _dl.curr_datalog_idx; 
-	_dl.entries [_dl.curr_entry].length = length; 
-	_dl.curr_entry = (_dl.curr_entry + 1) & MAX_ENTRIES_MASK;
-
-	for (i = 0; i < length; i++)
+	if (_recording)
 	{
-		_dl.datalog [_dl.curr_datalog_idx] = data[i];
-		_dl.curr_datalog_idx = (_dl.curr_datalog_idx + 1) & DATALOG_MASK; 
+		_dl.entries [_dl.curr_entry].start = _dl.curr_datalog_idx; 
+		_dl.entries [_dl.curr_entry].length = length; 
+		_dl.curr_entry = (_dl.curr_entry + 1) & MAX_ENTRIES_MASK;
+
+		for (i = 0; i < length; i++)
+		{
+			_dl.datalog [_dl.curr_datalog_idx] = data[i];
+			_dl.curr_datalog_idx = (_dl.curr_datalog_idx + 1) & DATALOG_MASK; 
+		}
 	}
 }

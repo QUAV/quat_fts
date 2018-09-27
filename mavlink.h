@@ -38,7 +38,7 @@ typedef struct __packed
 	unsigned int TimeBootMs;
 	float Roll, Pitch, Yaw;
 	float RollSpeed, PitchSpeed, YawSpeed;
-} mavlink_msg_attitude_h;
+} mavlink_msg_attitude_t;
 
 typedef struct __packed
 {
@@ -46,7 +46,7 @@ typedef struct __packed
 	signed short XAcc, YAcc, ZAcc;
 	signed short XGyro, YGyro, ZGyro;
 	signed short XMag, YMag, ZMag;
-} mavlink_msg_scaled_imu2_h;
+} mavlink_msg_scaled_imu2_t;
 
 typedef struct __packed
 {
@@ -57,7 +57,7 @@ typedef struct __packed
 	float AbsPressure, DiffPressure, PressureAlt;
 	float Temperature;
 	unsigned short FieldsUpdated;
-} mavlink_msg_highres_imu_h;
+} mavlink_msg_highres_imu_t;
 
 typedef struct __packed
 {
