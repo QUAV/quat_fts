@@ -50,6 +50,17 @@ typedef struct __packed
 
 typedef struct __packed
 {
+	unsigned long long time_usec;
+	float XAcc, YAcc, ZAcc;
+	float XGyro, YGyro, ZGyro;
+	float Xmag,  YMag, ZMag;
+	float AbsPressure, DiffPressure, PressureAlt;
+	float Temperature;
+	unsigned short FieldsUpdated;
+} mavlink_msg_highres_imu_h;
+
+typedef struct __packed
+{
 	float Param1, Param2, Param3, Param4, Param5, Param6, Param7;
 	unsigned short CmdId;
 	unsigned char TargetSysId, TargetCompId;

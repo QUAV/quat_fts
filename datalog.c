@@ -28,11 +28,10 @@ typedef struct
 	unsigned length;
 } datalog_entry_t;
 
-static int _init = 0;
-
 typedef struct 
 {
 	char mark[4];	// 'F','T','S',version
+	unsigned version;
 	unsigned cause; // fired_cause_t
 
 	datalog_entry_t entries[MAX_ENTRIES];
@@ -43,6 +42,8 @@ typedef struct
 } datalog_t;
 
 static datalog_t _dl;
+
+static int _init = 0;
 
 void _flash_init(void) 
 {
@@ -79,6 +80,7 @@ static void _flash_data_raw_save (unsigned* data, int bytes)
 void _datalog_init()
 {
 	_dl.mark[0] = 'F', _dl.mark[1] = 'T', _dl.mark[2] = 'S';
+	_dl.version = 1;
 	_dl.curr_entry = 0;
 	_dl.curr_datalog_idx = 0;
 

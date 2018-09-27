@@ -44,8 +44,10 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
+//static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _fire();
 static void _request_motor_disabling();
+
 
 static dispatcher_context_t _context;
 
@@ -78,6 +80,8 @@ void main()
 	mavlink_add_handler(&att_handler);
 	mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
 	mavlink_add_handler(&imu2_handler);
+	//mavlink_handler_t highres_imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HIGHRES_IMU, .Func = _highres_imu };
+	//mavlink_add_handler(&highres_imu_handler);
 
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
@@ -230,7 +234,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	}
 
 	if (!warn_ready)
-		_led_flash(LED_AMBER, 500);
+		_led_flash(LED_AMBER, 500);	// only on pixhawk boards
 
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
@@ -245,7 +249,8 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
 		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
 	
-	bool acc_ready = acc > 300;
+	// IMU telemetry  frequency must be 10 Hz; scale is cm
+	bool acc_ready = acc > 300; 
 	fall_time = acc_ready ? 0 : (fall_time + 100);
 	if (fall_time > _conf.warn_to_panic_ms)
 	{
@@ -255,9 +260,30 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 	}
 
 	if (!acc_ready)
-		_led_flash(LED_AMBER, 500);
+		_led_flash(LED_AMBER, 500);	// only in pixhawk boards
 }
+/*
+// APM sends this message at just 1 Hz!
+static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+{
+	static unsigned fall_time = 0;
+	mavlink_msg_highres_imu_h *data = (mavlink_msg_highres_imu_h *)msg->Payload;
 
+	float acc = data->XAcc * data->XAcc + data->YAcc * data->YAcc + data->ZAcc * data->ZAcc; 
+
+	bool acc_ready = acc > 300.0f;
+	fall_time = acc_ready ? 0 : (fall_time + 100);
+	if (fall_time > _conf.warn_to_panic_ms)
+	{
+		_fire_cause = FIRED_FALL;
+		_fire();
+       	printf("FALLING\n");
+	}
+
+	if (!acc_ready)
+		_led_flash(LED_AMBER, 500); // only in pixhawk boards
+}
+*/
 static void _request_motor_disabling()
 {
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 

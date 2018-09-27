@@ -1,0 +1,15 @@
+
+Requerimientos FTS
+
+- Conexion con pixhawk, fw Arducopter (el APM no transmite los acelerometros con suficiente frecuencia)
+- Telemetria de IMU a 10 Hz
+
+
+Codigos de color
+
+- GREEN: Standby
+- BROWN Slow flash: active
+- BROWN fast flash: critical
+
+- WHITE: Calibrating
+- RED: Boot

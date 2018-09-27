@@ -54,6 +54,7 @@ void __board_initialize()
 
 void board_set_led(led_mask_t mask, led_mask_t value)
 {
+	// Note: amber led not supported on this board
 #ifdef LED_INVERSION_MASK
 	value ^= LED_INVERSION_MASK;
 #endif
