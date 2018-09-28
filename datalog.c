@@ -14,12 +14,12 @@
 #define FLASH_DATALOG_ADDR (0x8040000 - FLASH_RESERVE) //0x8003C00
 
 
-#define DATALOG_BLEN (14)
+#define DATALOG_BLEN (13)
 #define DATALOG_LEN  (1 << DATALOG_BLEN)
 #define DATALOG_MASK (DATALOG_LEN - 1)
 
 // Average mavlink package is ~30 bytes
-#define MAX_ENTRIES_BLEN   (7)
+#define MAX_ENTRIES_BLEN   (6)
 #define MAX_ENTRIES        (1 << MAX_ENTRIES_BLEN)
 #define MAX_ENTRIES_MASK   (MAX_ENTRIES - 1)
 
