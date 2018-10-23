@@ -93,6 +93,7 @@
           <file file_name="../../ess/support/stm32f1/i2c.c" />
           <file file_name="../../ess/support/stm32f1/timer.c" />
           <file file_name="../../ess/support/stm32f1/wdt.c" />
+          <file file_name="../../ess/support/stm32f1/bxcan.c" />
         </folder>
         <folder Name="stdlib">
           <file file_name="../../ess/support/stdlib/malloc.c" />
@@ -117,7 +118,12 @@
       <file file_name="main_cortex.c" />
       <file file_name="mavlink.c" />
       <file file_name="datalog.c" />
-      <file file_name="stm32f10x_flash.c" />
+      <folder Name="third_party">
+        <file file_name="third_party/canard.c" />
+        <file file_name="third_party/canard_stm32.c" />
+        <file file_name="third_party/stm32f10x_flash.c" />
+      </folder>
+      <file file_name="uavcan.c" />
     </folder>
     <folder Name="System Files" />
     <folder Name="CMSIS Files">

@@ -1,15 +1,27 @@
 
-Requerimientos FTS
+* FTS requirements
 
-- Conexion con pixhawk, fw Arducopter (el APM no transmite los acelerometros con suficiente frecuencia)
-- Telemetria de IMU a 10 Hz
+- Conection with pixhawk, fw Arducopter (Autopilot firmware does not transmit sensor data frequently enough)
+- Telemmetry: IMU data at least 10 Hz
 
 
-Codigos de color
+* Color codes
 
 - GREEN: Standby
-- BROWN Slow flash: active
-- BROWN fast flash: critical
+- AMBER Slow flash: active
+- AMBER fast flash: critical
 
 - WHITE: Calibrating
 - RED: Boot
+
+* Armed state
+
+- The FTS enters ARMED mode (firing the parachute is possible only in this state) when the flight controller goes from STANDBY to ACTIVE startPeriodic
+
+* Deploy conditions
+
+- Bad attitude panic: deploy if roll or pitch outside of -114/114 degrees (-2/2 radians) limit
+- Bad attitude warning: idem, for -45/45 degrees (-0.8/0.8 radians) DURING 2 COMPLETE SECONDS
+- Deadman: no news from flight controller in 1.5 seconds. Only when last state was "ARMED"
+- Fall: free fall for 2 COMPLETE SECONDS
+- Order from flight controller (custom)

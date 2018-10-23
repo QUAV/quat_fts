@@ -88,6 +88,9 @@ void main()
 	//mavlink_handler_t highres_imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HIGHRES_IMU, .Func = _highres_imu };
 	//mavlink_add_handler(&highres_imu_handler);
 
+
+	//board_uavcan_init (); 
+
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
 #endif

@@ -3,10 +3,11 @@ Cambios placa:
 - Cristal a 12 Mhz
 - Invertir LED
 - Detect 2 a PB7, pin 59
-- UART4 a USART2 -> PA2, PA3, pines 25, 29
+- UART4 a USART2 -> PA2, PA3
 - Arreglar diodos del reves
-- Añadir sirena, 12v 1200 miliamps en PB10, pin 29
-
+- Añadir sirena, 12v 1200 miliamps en PC10, pin 29
+- Carga bateria: transistor de conexion a la bateria del FTS
+- Comprobar terminadores CAN: estan? deberian estar?
 
 
 Micro: STM32F105RCT6

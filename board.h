@@ -40,6 +40,8 @@ void board_mavlink_init(dispatcher_context_t *context, uart_control_block_t *cb)
 int board_mavlink_read(unsigned char *buffer, unsigned long length);
 int board_mavlink_write(unsigned char *buffer, unsigned long length);
 
+void board_uavcan_init ();
+
 void board_init_pwm(dispatcher_context_t *context, dispatcher_callback_t callback);
 
 void board_set_servo(unsigned ch, unsigned value);

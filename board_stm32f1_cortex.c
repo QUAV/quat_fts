@@ -35,6 +35,9 @@ void __board_initialize()
 	#define  DETECT_PIN_1 PB7	
 	#define  DETECT_PIN_2 PB5	
 
+	gpio_pin_config(PC10, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Horn
+	#define  HORN_PIN_1 PB10	
+
 	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED
 	#define  ARMED_PIN PB6
 
@@ -131,4 +134,7 @@ void board_init_pwm(dispatcher_context_t *context, dispatcher_callback_t callbac
 }
 
 #endif
+
+
+
 

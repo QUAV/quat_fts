@@ -4,7 +4,7 @@
 // Flash storage should be performed only in case of parachute deploy
 
 #include "datalog.h"
-#include "stm32f10x_flash.h"
+#include "third_party/stm32f10x_flash.h"
 #include <kernel/panic.h>
 
 
