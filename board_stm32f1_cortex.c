@@ -11,11 +11,11 @@
 void __board_initialize()
 {
 	gpio_pin_config(PC6, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led red
-	#define LED_R_PIN PC6
+	#define LED_R_PIN PC8
 	gpio_pin_config(PC7, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led green
-	#define LED_G_PIN PC7
+	#define LED_B_PIN PC7
 	gpio_pin_config(PC8, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led blue
-	#define LED_B_PIN PC8
+	#define LED_G_PIN PC6
 
 	gpio_pin_config(PA2, GPIO_MODE_ALT_FUNC | GPIO_MODEF_MED_SPEED);	// USART2_TX REMAP 0	(SBUS) NOTE: inverted signal
 	gpio_pin_config(PA3, GPIO_MODE_INPUT);								// USART2_Rx REMAP 0	(SBUS) NOTE: inverted signal
@@ -69,6 +69,12 @@ void board_set_led(led_mask_t mask, led_mask_t value)
 
 	if (mask & LED_BLUE)
 		hal_gpio_pin_set(LED_B_PIN, value & LED_BLUE);
+
+	/*if (mask & LED_AMBER)
+	{
+		hal_gpio_pin_set(LED_R_PIN, value & LED_RED);
+		hal_gpio_pin_set(LED_G_PIN, value & LED_GREEN);
+	}*/
 }
 
 bool board_detect_lines (unsigned line)

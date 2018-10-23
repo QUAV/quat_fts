@@ -8,6 +8,7 @@ Cambios placa:
 - Añadir sirena, 12v 1200 miliamps en PC10, pin 29
 - Carga bateria: transistor de conexion a la bateria del FTS
 - Comprobar terminadores CAN: estan? deberian estar?
+- Ajustar footprint led
 
 
 Micro: STM32F105RCT6

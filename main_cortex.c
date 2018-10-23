@@ -56,20 +56,30 @@ static void _request_motor_disabling();
 static dispatcher_context_t _context;
 
 void main()
-{
+ {
 	board_set_led(-1, 0); // switch off all leds
 	board_set_led(-1, LED_GREEN); // enabled
 
-	//board_set_led(-1, LED_GREEN | LED_BLUE | LED_RED); 
-	//thread_sleep(100);
-	//board_set_led(-1, 0); 
+	/* LED test
+	board_set_led(-1, LED_BLUE); 
+	thread_sleep(1000);
+	board_set_led(-1, 0); */
 
 	printf("\n\nBoot!\n");
 
 	_detonator = board_detect_lines (0) && board_detect_lines (1);
 	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
     if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
-		_request_motor_disabling ();
+		_request_motor_disabling (); 
+
+	
+   	/* Fire test
+	thread_sleep(1000);
+	board_enable_charges(true);
+	board_fire(1);
+	thread_sleep(800);
+	board_fire(0);
+  	board_enable_charges(false);*/
 
 	dispatcher_context_create(&_context);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
