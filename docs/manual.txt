@@ -3,13 +3,14 @@
 
 - Conection with pixhawk, fw Arducopter (Autopilot firmware does not transmit sensor data frequently enough)
 - Telemmetry: IMU data at least 10 Hz
-
+              HEARTBEAT at least 1 hz
 
 * Color codes
 
-- GREEN: Standby
-- AMBER Slow flash: active
-- AMBER fast flash: critical
+- GREEN: pixhawk is connected and in Standby mode
+- RED: FTS is booting or running but there is no connection with an active pixhawk established
+- WHITE: pixhawk is Calibrating
+- YELLOW: pixhawk is connected and active, FTS is armed
 
 - WHITE: Calibrating
 - RED: Boot

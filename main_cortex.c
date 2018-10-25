@@ -21,6 +21,9 @@ static bool _detonator = false;
 static bool _armed = false;
 static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
+static led_mask_t _current_color = LED_RED;
+static int _current_flash_time = 300;
+
 
 
 static struct {
@@ -57,13 +60,13 @@ static dispatcher_context_t _context;
 
 void main()
  {
-	board_set_led(-1, 0); // switch off all leds
-	board_set_led(-1, LED_GREEN); // enabled
+	//board_set_led(-1, 0); // switch off all leds
+	//board_set_led(-1, LED_GREEN); // enabled
 
-	/* LED test
-	board_set_led(-1, LED_BLUE); 
+	// LED test
+	/*board_set_led(-1, LED_GREEN); 
 	thread_sleep(1000);
-	board_set_led(-1, 0); */
+	board_set_led(-1, 0);*/ 
 
 	printf("\n\nBoot!\n");
 
@@ -110,8 +113,8 @@ void main()
 #ifdef ENABLE_WATCHDOG
 		wdt_reload();
 #endif
-		if (!dispatcher_dispatch(&_context, 1500))
-			_led_flash(LED_RED, 300);
+		if (!dispatcher_dispatch(&_context, _current_flash_time))
+			_led_flash(_current_color, _current_flash_time);
 	}
 }
 
@@ -158,7 +161,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 	mavlink_msg_heartbeat_t *data = (mavlink_msg_heartbeat_t *)msg->Payload;
 	mavlink_state_t state = data->SystemStatus;
 	
-	dispatcher_add(&_context, &_deadman_dispatcher, 1500);	
+	dispatcher_add(&_context, &_deadman_dispatcher, 1800); // 1500	
 
 	switch(state)
 	{
@@ -260,8 +263,8 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 		}
 	}
 
-	if (!warn_ready)
-		_led_flash(LED_AMBER, 500);	// only on pixhawk boards
+	//if (!warn_ready)
+	//	_led_flash(LED_AMBER, 500);	// only on pixhawk boards
 
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
@@ -289,8 +292,8 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
        	printf("FALLING\n");
 	}
 
-	if (!acc_ready)
-		_led_flash(LED_AMBER, 500);	// only in pixhawk boards
+	//if (!acc_ready)
+	//	_led_flash(LED_AMBER, 500);	// only in pixhawk boards
 }
 /*
 // APM sends this message at just 1 Hz!
@@ -358,6 +361,11 @@ static led_mask_t _leds_on = 0;
 
 static void _led_flash(led_mask_t mask, unsigned time)
 {
+	//if(mask == LED_BLUE)
+	//	mask = LED_RGB;   // BRAKEPOINT! remove
+
+	_current_color = mask;
+	_current_flash_time = time;
 	if (mask & LED_RGB)
 	{
 		board_set_led(LED_RGB, mask);
