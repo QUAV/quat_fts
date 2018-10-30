@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="fts_out_stm32f1_cortex" target="8" version="2">
-  <project Name="fts_out_stm32f1_cortex">
+<solution Name="detonator" target="8" version="2">
+  <project Name="detonator">
     <configuration
       Family="STM32"
       Name="Common"
@@ -114,16 +114,8 @@
           <file file_name="../../ess/driver/meta/config.c" />
         </folder>
       </folder>
-      <file file_name="board_stm32f1_cortex.c" />
-      <file file_name="main_cortex.c" />
-      <file file_name="mavlink.c" />
-      <file file_name="datalog.c" />
-      <folder Name="third_party">
-        <file file_name="third_party/canard.c" />
-        <file file_name="third_party/canard_stm32.c" />
-        <file file_name="third_party/stm32f10x_flash.c" />
-      </folder>
-      <file file_name="uavcan.c" />
+      <file file_name="main_detonator.c" />
+      <file file_name="board_detonator.c" />
     </folder>
     <folder Name="System Files" />
     <folder Name="CMSIS Files">
@@ -152,6 +144,17 @@
       macros="DeviceVectorsFile=STM32F100xB.vec" />
     <configuration
       Name="FTS_F105_Cortex"
+      Target="STM32F105RC"
+      arm_architecture="v7M"
+      arm_core_type="Cortex-M3"
+      arm_fpu_type="None"
+      arm_simulator_memory_simulation_parameter="STM32F105RC;0x40000;0x10000"
+      arm_target_connect_with_reset="No"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32F105xC.vec"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32F105RC_MemoryMap.xml"
+      macros="DeviceVectorsFile=STM32F105xC.vec" />
+    <configuration
+      Name="Detonator"
       Target="STM32F105RC"
       arm_architecture="v7M"
       arm_core_type="Cortex-M3"
@@ -218,9 +221,16 @@
     inherited_configurations="Flash;PixHawk F100C8;Release;THUMB" />
   <configuration
     Name="FTS_F105_Cortex"
-    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=12000000UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/57600&quot;;DISABLE_USB_COMMS"
+    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=12000000UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS"
     hidden="Yes" />
   <configuration
     Name="FTS_F105_Cortex_Debug"
-    inherited_configurations="FTS_F105_Cortex;Debug;THUMB" />
+    inherited_configurations="Debug;THUMB;FTS_F105_Cortex" />
+  <configuration
+    Name="Detonator"
+    c_preprocessor_definitions="BOARD_FTS_CORTEX;HSE_VALUE=12000000UL;PLL_VALUE=4;UART_DEVICE_COUNT=3;STDOUT_STREAM=&quot;/dev/uart0/57600&quot;;DISABLE_USB_COMMS"
+    hidden="Yes" />
+  <configuration
+    Name="Detonator_Debug"
+    inherited_configurations="Debug;THUMB;Detonator" />
 </solution>

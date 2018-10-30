@@ -1,0 +1,16 @@
+
+
+ RFD 900
+ -------
+
+- Bauds: 57600
+
+
+ BOARD
+ -----
+
+Implementar:
+
+ - 1 o 2 entradas switch?
+ - Eliminar CAN
+ 
