@@ -11,6 +11,7 @@ typedef enum
 	FIRED_BAD_ATTITUDE = 4,
 	FIRED_ATTITUDE_ROLL = 5,
 	FIRED_FALL = 6,
+	FIRED_MANUAL = 7,
 } fired_cause_t;
 
 

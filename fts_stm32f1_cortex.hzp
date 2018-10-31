@@ -124,6 +124,7 @@
         <file file_name="third_party/stm32f10x_flash.c" />
       </folder>
       <file file_name="uavcan.c" />
+      <file file_name="detonator_link.c" />
     </folder>
     <folder Name="System Files" />
     <folder Name="CMSIS Files">

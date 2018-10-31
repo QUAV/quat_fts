@@ -4,6 +4,7 @@
 //#include "power.h"
 #include "board.h"
 #include "mavlink.h"
+#include "detonator_link.h"
 #include <kernel/dispatcher.h>
 #include <kernel/panic.h>
 #include <support/stm32f1/wdt.h>
@@ -54,7 +55,7 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 //static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 
 static void _request_motor_disabling();
-
+static void _detonator_fire();
 
 static dispatcher_context_t _context;
 
@@ -101,8 +102,9 @@ void main()
 	//mavlink_handler_t highres_imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HIGHRES_IMU, .Func = _highres_imu };
 	//mavlink_add_handler(&highres_imu_handler);
 
-
-	//board_uavcan_init (); 
+	detonator_link_initialize(&_context, _detonator_fire);
+	//board_uavcan_init ();
+	 
 
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
@@ -113,8 +115,8 @@ void main()
 #ifdef ENABLE_WATCHDOG
 		wdt_reload();
 #endif
-		if (!dispatcher_dispatch(&_context, _current_flash_time))
-			_led_flash(_current_color, _current_flash_time);
+		if (!dispatcher_dispatch(&_context, 1600)) //_current_flash_time))
+			_led_flash(_current_color, 1600); //_current_flash_time);
 	}
 }
 
@@ -139,6 +141,14 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req2, sizeof(req2));
 
 	dispatcher_add(context, dispatcher, 5000);
+}
+
+static void _detonator_fire()
+{
+	_fire_cause = FIRED_MANUAL;
+	_fire();
+
+	printf("MANUAL DETONATION\n");
 }
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
