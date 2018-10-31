@@ -26,7 +26,6 @@ static led_mask_t _current_color = LED_RED;
 static int _current_flash_time = 300;
 
 
-
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
 	unsigned int warn_to_panic_ms;
@@ -41,6 +40,8 @@ static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static void _led_flash(led_mask_t mask, unsigned time);
 
 static dispatcher_t _fire_off_dispatcher;
+
+static void _arm (bool arm);
 static void _fire();
 static void _fire_off();
 
@@ -145,6 +146,8 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _detonator_fire()
 {
+	_arm (true);	// manual detonation happens no matter what
+
 	_fire_cause = FIRED_MANUAL;
 	_fire();
 
@@ -199,8 +202,8 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 #endif
 					dispatcher_add(&_context, &_mavlink_dispatcher, 100);	
 
-                    board_enable_charges(false);
-					_armed = false;
+					_arm (true);
+
 					_state = MAV_STATE_STANDBY;
 				}
 			}
@@ -339,6 +342,12 @@ static void _request_motor_disabling()
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
 }
 
+				
+static void _arm (bool arm)
+{
+	board_enable_charges(arm);
+	_armed = arm;
+}
 
 static void _fire()
 {
