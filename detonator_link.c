@@ -47,10 +47,10 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 			unsigned char c = buffer[i];
 			if (c == '\n')
 			{
-				if(_length == 4)
+				if(_length == 8)
 				{
 					_msg[_length] = 0;
-					if (strcmp(_msg, "FIRE") == 0)
+					if (strcmp(_msg, "DETONATE") == 0)
 					{
 						_fire_func ();
 					}

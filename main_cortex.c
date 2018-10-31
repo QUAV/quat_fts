@@ -202,7 +202,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 #endif
 					dispatcher_add(&_context, &_mavlink_dispatcher, 100);	
 
-					_arm (true);
+					_arm (false);
 
 					_state = MAV_STATE_STANDBY;
 				}
@@ -214,8 +214,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 
 			if (_state == MAV_STATE_STANDBY)
 			{
-                board_enable_charges(true);
-				_armed = true;
+				_arm (true);
 			}
 
 			_stand_by_delay = true;
@@ -365,7 +364,7 @@ static void _fire()
 		board_fire(true);
 		_already_fired = true;
 
-		dispatcher_add(&_context, &_fire_off_dispatcher, 300);
+		dispatcher_add(&_context, &_fire_off_dispatcher, 2000);
 
 		datalog_flash(_fire_cause);
 	}
