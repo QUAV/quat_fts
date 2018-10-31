@@ -36,8 +36,8 @@ void __board_initialize()
 	#define  DETECT_PIN_1 PB7	
 	#define  DETECT_PIN_2 PB5	
 
-	gpio_pin_config(PC10, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Horn
-	#define  HORN_PIN_1 PB10	
+	gpio_pin_config(PC10, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Horn
+	#define  HORN_PIN_1 PC10	
 
 	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED
 	#define  ARMED_PIN PB6
@@ -53,6 +53,11 @@ void __board_initialize()
    	gpio_pin_config(PA8, GPIO_MODE_ALT_FUNC);	// TIM1_CHN1
 	#define PPM_IN_PIN PA8	// TIM2
 
+}
+
+void board_set_buzzer(bool enable)
+{
+	hal_gpio_pin_set(HORN_PIN_1, enable ? 1 : 0);
 }
 
 

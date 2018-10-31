@@ -70,6 +70,11 @@ void main()
 	thread_sleep(1000);
 	board_set_led(-1, 0);*/ 
 
+	// BUZZER test
+	//board_set_buzzer(true); 
+	//thread_sleep(2000);
+	//board_set_buzzer(false);
+
 	printf("\n\nBoot!\n");
 
 	_detonator = board_detect_lines (0) && board_detect_lines (1);
@@ -364,7 +369,7 @@ static void _fire()
 		board_fire(true);
 		_already_fired = true;
 
-		dispatcher_add(&_context, &_fire_off_dispatcher, 2000);
+		dispatcher_add(&_context, &_fire_off_dispatcher, 600);
 
 		datalog_flash(_fire_cause);
 	}
