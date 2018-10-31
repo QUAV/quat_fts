@@ -36,8 +36,9 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 	unsigned char buffer[16];
 	while(true)
 	{
-		int read = fread(buffer, sizeof(buffer), 1, stdin);
+		int read = fread(buffer, 1, sizeof(buffer), stdin);
 		//int read = board_detonator_link_read(buffer, sizeof(buffer));
+
 		if (read <= 0) 
 			break;
 
@@ -49,7 +50,7 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 				if(_length == 4)
 				{
 					_msg[_length] = 0;
-					if (strcmp(buffer, "FIRE") == 0)
+					if (strcmp(_msg, "FIRE") == 0)
 					{
 						_fire_func ();
 					}
