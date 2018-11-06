@@ -66,13 +66,13 @@ void main()
 	//board_set_led(-1, LED_GREEN); // enabled
 
 	// LED test
-	/*board_set_led(-1, LED_GREEN); 
-	thread_sleep(1000);
-	board_set_led(-1, 0);*/ 
+	//board_set_led(-1, LED_GREEN); 
+	//thread_sleep(1000);
+	//board_set_led(-1, 0);
 
 	// BUZZER test
 	//board_set_buzzer(true); 
-	//thread_sleep(2000);
+	//thread_sleep(1000);
 	//board_set_buzzer(false);
 
 	printf("\n\nBoot!\n");
@@ -361,15 +361,17 @@ static void _fire()
 	}
 	else
 	{
+		board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
+
 		datalog_recording (false);
 		_request_motor_disabling();
 		printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
 		_led_flash(LED_BLUE, 500);
 	
 		board_fire(true);
-		_already_fired = true;
+		_already_fired = true; 
 
-		dispatcher_add(&_context, &_fire_off_dispatcher, 600);
+ 		dispatcher_add(&_context, &_fire_off_dispatcher, 600);
 
 		datalog_flash(_fire_cause);
 	}
