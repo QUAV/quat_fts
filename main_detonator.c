@@ -11,9 +11,12 @@
 
 //#define ENABLE_WATCHDOG
 
+static dispatcher_t _led_on_dispatcher;
 static dispatcher_t _led_off_dispatcher;
 static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
-static void _led_flash(led_mask_t mask, unsigned time);
+static void _led_on(dispatcher_context_t *context, dispatcher_t *dispatcher);
+
+static led_mask_t _leds_on = LED_GREEN;
 
 static dispatcher_context_t _context;
 
@@ -22,6 +25,7 @@ static uart_control_block_t _cb;
 static dispatcher_t _rx_dispatcher;
 
 static dispatcher_t _firestarter_dispatcher;
+
 
 // Just bridge the messages to the log
 static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher);
@@ -48,19 +52,22 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	if (board_detect_lines (0))
+	{
+		_leds_on = LED_RED;
 		board_fts_write("DETONATE\n", 9);
-
+	}
 	dispatcher_add(&_context, &_firestarter_dispatcher, 50);
 }
 
 void main()
- {
+{
 	board_set_led(-1, 0); // switch off all leds
 	board_set_led(-1, LED_GREEN); // enabled
 
 	printf("\n\nDetonator board boot!\n");
  
 	dispatcher_context_create(&_context);
+	dispatcher_create(&_led_on_dispatcher, nullptr, _led_on, nullptr);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
 
 	event_create(&_rx_event, EVENTF_AUTORESET);
@@ -77,7 +84,7 @@ void main()
 	dispatcher_create(&_firestarter_dispatcher, nullptr, _firestarter_handler, nullptr);
 
 	dispatcher_add(&_context, &_firestarter_dispatcher, 50);
-
+	dispatcher_add(&_context, &_led_off_dispatcher, 300);
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
 #endif
@@ -90,7 +97,7 @@ void main()
 
 		if (!dispatcher_dispatch(&_context, 300))
 		{
-			_led_flash(LED_RGB, 300);
+			_leds_on = LED_RGB;
 		}
 	}
 }
@@ -103,26 +110,17 @@ void main()
 
 
 
-static led_mask_t _leds_on = 0;
 
-static void _led_flash(led_mask_t mask, unsigned time)
+static void _led_on(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	if (mask & LED_RGB)
-	{
-		board_set_led(LED_RGB, mask);
-		_leds_on |= LED_RGB;
-	}
-	else
-	{
-		board_set_led(mask, -1);
-		_leds_on |= mask;
-	}
-	dispatcher_add(&_context, &_led_off_dispatcher, time);
+	board_set_led(LED_RGB, _leds_on);
+
+	dispatcher_add(&_context, &_led_off_dispatcher, 300);
 }
 
 static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	board_set_led(_leds_on, 0);
-	_leds_on = 0;
+    dispatcher_add(&_context, &_led_on_dispatcher, 300);
 }
  

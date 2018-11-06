@@ -386,9 +386,6 @@ static led_mask_t _leds_on = 0;
 
 static void _led_flash(led_mask_t mask, unsigned time)
 {
-	//if(mask == LED_BLUE)
-	//	mask = LED_RGB;   // BRAKEPOINT! remove
-
 	_current_color = mask;
 	_current_flash_time = time;
 	if (mask & LED_RGB)
