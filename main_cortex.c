@@ -15,8 +15,6 @@
 
 //#define ENABLE_WATCHDOG
 
-
-
 static mavlink_state_t _state = MAV_STATE_UNINIT;
 static bool _detonator = false;
 static bool _armed = false;
@@ -185,10 +183,12 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 	{
 		case MAV_STATE_BOOT:
 			_led_flash(LED_RED, 50);
+            //printf("* to boot\n"); 
 			_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
 			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	
+            //printf("* to calibration\n"); 
 			_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
@@ -209,6 +209,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 
 					_arm (false);
 
+					//printf("* to standby\n"); 
 					_state = MAV_STATE_STANDBY;
 				}
 			}
@@ -361,15 +362,21 @@ static void _fire()
 	}
 	else
 	{
-		board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
+        if (_armed)
+		{
+			datalog_recording (false);
+			board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
+			_request_motor_disabling();
+       		_led_flash(LED_BLUE, 500);
+           	board_fire(true);
 
-		datalog_recording (false);
-		_request_motor_disabling();
-		printf(_armed ? "FIRE!\n" : "FIRE but NOT ARMED\n");
-		_led_flash(LED_BLUE, 500);
-	
-		board_fire(true);
-		_already_fired = true; 
+			_already_fired = true; 
+            printf("FIRE!\n");	
+		}
+		else
+		{
+			printf("FIRE but NOT ARMED\n");
+		}
 
  		dispatcher_add(&_context, &_fire_off_dispatcher, 600);
 
