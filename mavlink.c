@@ -68,6 +68,8 @@ void mavlink_add_handler(mavlink_handler_t *handler)
 	mutex_unlock(&_handler_mutex);
 }
 
+// FTS heartbeat sent to flight controller
+
 static void _heartbeat_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	mavlink_msg_heartbeat_t cmd = (mavlink_msg_heartbeat_t) { .Type = 18,	// MAV_TYPE_
@@ -77,7 +79,7 @@ static void _heartbeat_dispatch(dispatcher_context_t *context, dispatcher_t *dis
 	mavlink_send_msg(MAVLINK_MSG_ID_HEARTBEAT, &cmd, sizeof(cmd));
 
 	_started = true;
-	printf("<- heartbeat\n");
+	printf("<- FTS heartbeat\n");
 
 	dispatcher_add(context, dispatcher, 10000); 
 }
