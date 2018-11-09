@@ -44,12 +44,14 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
  PA11 - 44 - CAN1RX OK
  PA12 - 45 - CAN1TX
 
+ PC0 (8), <- input Voltage
 
- PA8  - 41 - PPM (TIM1 CH1) -> in info servos, necesario decodificar! consultar problemas de trans. con Miguel
-                        destinado a activacion de emergencia del paraca
-                        EJEMPLO en samples de stm32f1
-                        Se conf. en input pull in, no necesita alt. func.
-                        Necesita un pin TIMx_CHx, esperemos que el TIM1 no se necesario para otra cosa
+
+ ;PA8  - 41 - PPM (TIM1 CH1) -> in info servos, necesario decodificar! consultar problemas de trans. con Miguel
+ ;                       destinado a activacion de emergencia del paraca
+ ;                        EJEMPLO en samples de stm32f1
+ ;                        Se conf. en input pull in, no necesita alt. func.
+ ;                        Necesita un pin TIMx_CHx, esperemos que el TIM1 no se necesario para otra cosa
 
 
 
