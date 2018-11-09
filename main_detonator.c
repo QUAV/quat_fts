@@ -51,7 +51,7 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 
 static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	if (board_detect_lines (0))
+	if ((board_detect_lines (0) == true) && (board_detect_lines (1) == true))
 	{
 		_leds_on = LED_RED;
 		board_fts_write("DETONATE\n", 9);
