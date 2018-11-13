@@ -44,7 +44,7 @@ static void _fire();
 static void _fire_off();
 
 static dispatcher_t _mavlink_dispatcher;
-static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
+//static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_t _deadman_dispatcher;
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 
@@ -59,7 +59,7 @@ static void _detonator_fire();
 static dispatcher_context_t _context;
 
 void main()
- {
+{
 	//board_set_led(-1, 0); // switch off all leds
 	//board_set_led(-1, LED_GREEN); // enabled
 
@@ -94,7 +94,7 @@ void main()
 	dispatcher_create(&_fire_off_dispatcher, nullptr, _fire_off, nullptr);
 
 	mavlink_initialize(&_context);
-	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
+	//dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
 	dispatcher_create(&_deadman_dispatcher, nullptr, _deadman_handler, nullptr);
 
 	mavlink_handler_t heartbeat_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HEARTBEAT, .Func = _heartbeat };
@@ -124,6 +124,9 @@ void main()
 	}
 }
 
+/*
+// Not used
+
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	// this configures mavlink stream
@@ -146,6 +149,7 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 	dispatcher_add(context, dispatcher, 5000);
 }
+*/
 
 static void _detonator_fire()
 {
