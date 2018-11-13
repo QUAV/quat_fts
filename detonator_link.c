@@ -24,7 +24,8 @@ void detonator_link_initialize(dispatcher_context_t *context, detonator_link_fir
 
 	_fire_func = fire_func;
 
-	dispatcher_create(&_rx_dispatcher, &stdin->io.InputNotEmpty, _rx_dispatch, nullptr);
+    io_entry_t *io = __get_FILE_io(stdin);
+	dispatcher_create(&_rx_dispatcher, &io->InputNotEmpty, _rx_dispatch, nullptr);
 	dispatcher_add(context, &_rx_dispatcher, TIMEOUT_NEVER);
 }
 
