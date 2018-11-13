@@ -93,7 +93,6 @@
           <file file_name="../../ess/support/stm32f1/i2c.c" />
           <file file_name="../../ess/support/stm32f1/timer.c" />
           <file file_name="../../ess/support/stm32f1/wdt.c" />
-          <file file_name="../../ess/support/stm32f1/bxcan.c" />
         </folder>
         <folder Name="stdlib">
           <file file_name="../../ess/support/stdlib/malloc.c" />
