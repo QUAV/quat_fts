@@ -209,7 +209,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 					printf("type: %s\n", _frame_type[data->Type]);
 					printf("mavlink version %d\n", data->MavlinkVersion);
 #endif
-					dispatcher_add(&_context, &_mavlink_dispatcher, 100);	
+//					dispatcher_add(&_context, &_mavlink_dispatcher, 100);
 
 					_arm (false);
 
