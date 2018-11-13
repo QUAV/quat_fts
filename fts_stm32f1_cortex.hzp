@@ -54,7 +54,27 @@
       target_reset_script="FLASHReset()" />
     <configuration Name="RAM" target_reset_script="Reset()" />
     <folder Name="Source Files">
-      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <file file_name="board_stm32f1_cortex.c" />
+      <file file_name="main_cortex.c" />
+      <file file_name="mavlink.c" />
+      <file file_name="datalog.c" />
+      <folder Name="third_party">
+        <file file_name="third_party/canard.c" />
+        <file file_name="third_party/canard_stm32.c" />
+        <file file_name="third_party/stm32f10x_flash.c" />
+      </folder>
+      <file file_name="uavcan.c" />
+      <file file_name="detonator_link.c" />
+    </folder>
+    <folder Name="System Files">
+      <folder Name="driver">
+        <folder Name="io">
+          <file file_name="../../ess/driver/io/uart_device.c" />
+        </folder>
+        <folder Name="meta">
+          <file file_name="../../ess/driver/meta/config.c" />
+        </folder>
+      </folder>
       <folder Name="kernel">
         <file file_name="../../ess/kernel/ascii.c" />
         <file file_name="../../ess/kernel/autoinit.c" />
@@ -105,30 +125,10 @@
           <file file_name="../../ess/support/misc/eeprom.c" />
         </folder>
       </folder>
-      <folder Name="driver">
-        <folder Name="io">
-          <file file_name="../../ess/driver/io/uart_device.c" />
-        </folder>
-        <folder Name="meta">
-          <file file_name="../../ess/driver/meta/config.c" />
-        </folder>
+      <folder Name="CMSIS Files">
+        <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.c" />
+        <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.h" />
       </folder>
-      <file file_name="board_stm32f1_cortex.c" />
-      <file file_name="main_cortex.c" />
-      <file file_name="mavlink.c" />
-      <file file_name="datalog.c" />
-      <folder Name="third_party">
-        <file file_name="third_party/canard.c" />
-        <file file_name="third_party/canard_stm32.c" />
-        <file file_name="third_party/stm32f10x_flash.c" />
-      </folder>
-      <file file_name="uavcan.c" />
-      <file file_name="detonator_link.c" />
-    </folder>
-    <folder Name="System Files" />
-    <folder Name="CMSIS Files">
-      <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.c" />
-      <file file_name="$(TargetsDir)/STM32/include/system_stm32f1xx.h" />
     </folder>
     <configuration
       Name="PixHawk F103C8"
@@ -184,7 +184,7 @@
     hidden="Yes" />
   <configuration
     Name="Naze32r5"
-    c_preprocessor_definitions="BOARD_NAZE32=5;HSE_VALUE=12000000UL;PLL_VALUE=6;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;;DISABLE_USB_COMMS;EEPROM_I2C_MODULE=1"
+    c_preprocessor_definitions="BOARD_NAZE32=5;HSE_VALUE=12000000UL;PLL_VALUE=6;STDOUT_STREAM=&quot;/dev/uart0/115200&quot;"
     hidden="Yes" />
   <configuration
     Name="Naze32r5 Debug"

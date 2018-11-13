@@ -391,8 +391,9 @@ void board_uavcan_init ()
 	CanardSTM32CANTimings can_timings;
 
 	RCC->APB1ENR |= RCC_APB1ENR_CAN1EN;
+#ifdef RCC_APB1ENR_CAN2EN
 	RCC->APB1ENR |= RCC_APB1ENR_CAN2EN;
-
+#endif
 	canardSTM32ComputeCANTimings(cpu_get_pclk1(), 1000000, &can_timings);
 
 	int res = canardSTM32Init(&can_timings, CanardSTM32IfaceModeNormal);

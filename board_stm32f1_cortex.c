@@ -3,13 +3,15 @@
 #include <support/stm32f1/cpu.h>
 #include <support/stm32f1/gpio.h>
 #include <support/gpio_hal.h>
-#include <support/i2c_hal.h>
 #include <support/pwm_hal.h>
+#include <kernel/panic.h>
 
 #define LED_INVERSION_MASK (LED_RGB)
 
 void __board_initialize()
 {
+#if defined BOARD_FTS_CORTEX
+
 	gpio_pin_config(PC6, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led red
 	#define LED_R_PIN PC8
 	gpio_pin_config(PC7, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led green
@@ -53,6 +55,57 @@ void __board_initialize()
    	gpio_pin_config(PA8, GPIO_MODE_ALT_FUNC);	// TIM1_CHN1
 	#define PPM_IN_PIN PA8	// TIM2
 
+#elif defined BOARD_NAZE32
+
+	gpio_pin_config(PB4, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led red
+	#define LED_R_PIN PB4
+	gpio_pin_config(PB3, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led green
+	#define LED_B_PIN PB3
+//	gpio_pin_config(PC8, GPIO_MODE_OUTPUT | GPIO_MODEF_OPEN_DRAIN); // led blue
+//	#define LED_G_PIN PC6
+
+	gpio_pin_config(PB10, GPIO_MODE_ALT_FUNC | GPIO_MODEF_MED_SPEED);	// USART3_TX REMAP 0	<-- ch 5 <-> scl pin 21 
+	gpio_pin_config(PB11, GPIO_MODE_INPUT);								// USART3_Rx REMAP 0	<-- ch 6 <-> sda pin 22
+	#define MAVLINK_UART_MODULE 2	// USART3 in base 0
+
+	// Debug/detonator UART
+	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0
+	gpio_pin_config(PA10, GPIO_MODE_INPUT);								// USART1_Rx REMAP 0
+
+	gpio_pin_config(PA8, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 1 <- servo1 pin 29
+	gpio_pin_config(PA11, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 2 <- servo2 pin 32
+	#define FIRE_1_PIN PA8
+	#define FIRE_2_PIN PA11
+
+	gpio_pin_config(PA0, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 1 <- ch 1 pin 10
+	gpio_pin_config(PA15, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 2 <- ch 2 pin 11
+	#define  DETECT_PIN_1 PA0	
+	#define  DETECT_PIN_2 PA1	
+
+	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Horn <- servo 3 pin 42
+	#define  HORN_PIN_1 PB6	
+
+	gpio_pin_config(PB7, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED <- servo 4 pin 43
+	#define  ARMED_PIN PB7
+
+//	gpio_pin_config(PA11, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 RX REMAP 0
+//	gpio_pin_config(PA12, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 TX REMAP 0
+//	#define UAV_CAN1  1
+//
+//	gpio_pin_config(PB12, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN2 RX REMAP 0
+//	gpio_pin_config(PB13, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN2 TX REMAP 0
+//	#define UAV_CAN2  2
+
+//   	gpio_pin_config(PA8, GPIO_MODE_ALT_FUNC);	// TIM1_CHN1
+//	#define PPM_IN_PIN PA8	// TIM2
+
+#else
+#error "Board not supported"
+#endif
+
+#if (MAVLINK_UART_MODULE == DETONATOR_UART_MODULE)
+#error "Maybe DETONATOR_UART_MODULE should be a different port, or removed"
+#endif
 }
 
 void board_set_buzzer(bool enable)
@@ -69,10 +122,10 @@ void board_set_led(led_mask_t mask, led_mask_t value)
 #endif
 	if (mask & LED_RED)
 		hal_gpio_pin_set(LED_R_PIN, value & LED_RED);
-
+#ifdef LED_G_PIN
 	if (mask & LED_GREEN)
 		hal_gpio_pin_set(LED_G_PIN, value & LED_GREEN);
-
+#endif
 	if (mask & LED_BLUE)
 		hal_gpio_pin_set(LED_B_PIN, value & LED_BLUE);
 
