@@ -37,9 +37,8 @@ void board_fts_init(dispatcher_context_t *context, uart_control_block_t *cb);
 static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	static unsigned _length = 0, _done = 0;
-	static unsigned char _msg[128];
- 
-	unsigned char buffer[16];
+
+	unsigned char buffer[64];
 
 	int read = board_fts_read(buffer, sizeof(buffer));
 	if (read > 0)
@@ -50,8 +49,8 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 
 static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	bool aa = board_detect_lines (0);
-	bool bb = board_detect_lines (1);
+	bool a = board_detect_lines (0);
+	bool b = board_detect_lines (1);
 	if (a && b)
 	{
 		_leds_on = LED_RED;
