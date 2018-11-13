@@ -10,7 +10,6 @@ detonator_link_fire_func_t _fire_func = 0;
 
 int board_detonator_link_read(unsigned char *buffer, unsigned long length);
 
-static event_t _rx_event;
 static dispatcher_t _rx_dispatcher;
 static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher);
 
