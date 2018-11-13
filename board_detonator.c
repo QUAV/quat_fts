@@ -25,10 +25,10 @@ void __board_initialize()
 	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
 	gpio_pin_config(PA10, GPIO_MODE_INPUT);								// USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
 
-	gpio_pin_config(PB7, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 1 
-	gpio_pin_config(PB5, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 2
-	#define  DETECT_PIN_1 PB7	
-	#define  DETECT_PIN_2 PB5	
+	gpio_pin_config(PB7, GPIO_MODE_INPUT);	// Detect 1 
+	gpio_pin_config(PB5, GPIO_MODE_INPUT);	// Detect 2
+	#define  DETECT_PIN_1 PB7
+	#define  DETECT_PIN_2 PB5
 
    	//gpio_pin_config(PA8, GPIO_MODE_ALT_FUNC);	// TIM1_CHN1
 	//#define PPM_IN_PIN PA8	// TIM2
