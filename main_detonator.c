@@ -37,7 +37,7 @@ void board_fts_init(dispatcher_context_t *context, uart_control_block_t *cb);
 static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
 	static unsigned _length = 0, _done = 0;
-	static unsigned char _msg[64];
+	static unsigned char _msg[128];
  
 	unsigned char buffer[16];
 
@@ -48,10 +48,11 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 	dispatcher_add(context, dispatcher, TIMEOUT_NEVER);
 }
 
-
 static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	if ((board_detect_lines (0) == true) && (board_detect_lines (1) == true))
+	bool aa = board_detect_lines (0);
+	bool bb = board_detect_lines (1);
+	if (a && b)
 	{
 		_leds_on = LED_RED;
 		board_fts_write("DETONATE\n", 9);
@@ -71,8 +72,8 @@ void main()
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
 
 	event_create(&_rx_event, EVENTF_AUTORESET);
-	static unsigned char _fts_input_buffer[64];
-	static unsigned char _fts_output_buffer[64];
+	static unsigned char _fts_input_buffer[128];
+	static unsigned char _fts_output_buffer[128];
 	_cb.Baudrate = 57600;
 	stream_buffer_create(&_cb.Input, _fts_input_buffer, sizeof(_fts_input_buffer), &_rx_event, nullptr);
 	stream_buffer_create(&_cb.Output, _fts_output_buffer, sizeof(_fts_output_buffer), nullptr, nullptr);
