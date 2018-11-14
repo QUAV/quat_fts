@@ -77,8 +77,8 @@ void main()
 
 	_detonator = board_detect_lines (0) && board_detect_lines (1);
 	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
-    if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
-		_request_motor_disabling (); 
+    //if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
+	//	_request_motor_disabling (); 
 
 	
    	/* Fire test
