@@ -26,7 +26,6 @@ void __board_initialize()
 	// Debug/detonator UART
 	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
 	gpio_pin_config(PA10, GPIO_MODE_INPUT);								// USART1_Rx REMAP 0	(SBUS) NOTE: inverted signal
-	#define DETONATOR_UART_MODULE 1		// UART
 
 	gpio_pin_config(PB0, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 1
 	gpio_pin_config(PB1, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Fire 2
@@ -151,15 +150,6 @@ void board_fire(bool fire)
 	hal_gpio_pin_set(FIRE_1_PIN, fire);
 	hal_gpio_pin_set(FIRE_2_PIN, fire);
 }
-
-#ifdef DETONATOR_UART_MODULE
-
-int board_detonator_link_read(unsigned char *buffer, unsigned long length)
-{
-	return uart_read(DETONATOR_UART_MODULE, buffer, length);
-}
-
-#endif
 
 #ifdef MAVLINK_UART_MODULE
 
