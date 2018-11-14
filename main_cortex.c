@@ -21,7 +21,7 @@ static bool _armed = false;
 static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
 static led_mask_t _current_color = LED_RED;
-static int _current_flash_time = 300;
+static int _current_flash_time = 500;
 
 
 static struct {
@@ -44,7 +44,7 @@ static void _fire();
 static void _fire_off();
 
 static dispatcher_t _mavlink_dispatcher;
-//static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
+static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_t _deadman_dispatcher;
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 
@@ -94,7 +94,7 @@ void main()
 	dispatcher_create(&_fire_off_dispatcher, nullptr, _fire_off, nullptr);
 
 	mavlink_initialize(&_context);
-	//dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
+	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
 	dispatcher_create(&_deadman_dispatcher, nullptr, _deadman_handler, nullptr);
 
 	mavlink_handler_t heartbeat_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HEARTBEAT, .Func = _heartbeat };
@@ -124,8 +124,6 @@ void main()
 	}
 }
 
-/*
-// Not used
 
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
@@ -149,7 +147,7 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 	dispatcher_add(context, dispatcher, 5000);
 }
-*/
+
 
 static void _detonator_fire()
 {
@@ -209,7 +207,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 					printf("type: %s\n", _frame_type[data->Type]);
 					printf("mavlink version %d\n", data->MavlinkVersion);
 #endif
-//					dispatcher_add(&_context, &_mavlink_dispatcher, 100);
+					dispatcher_add(&_context, &_mavlink_dispatcher, 100);
 
 					_arm (false);
 
@@ -301,11 +299,13 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
 		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
 	
-	// IMU telemetry  frequency must be 10 Hz; scale is cm
-	bool acc_ready = acc > 300; 
-	fall_time = acc_ready ? 0 : (fall_time + 100);
+
+	// IMU telemetry  frequency must be 5 Hz; scale is cm
+	int min_acc = 26;	// cm/sg^2 experimental measure while falling
+	bool acc_ready = acc > (min_acc * min_acc);
+	fall_time = acc_ready ? 0 : (fall_time + 200);
 	if (fall_time > _conf.warn_to_panic_ms)
-	{
+	{ 
 		if (!_already_fired)
 		{
 			_fire_cause = FIRED_FALL;
