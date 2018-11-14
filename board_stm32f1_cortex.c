@@ -103,9 +103,6 @@ void __board_initialize()
 #error "Board not supported"
 #endif
 
-#if (MAVLINK_UART_MODULE == DETONATOR_UART_MODULE)
-#error "Maybe DETONATOR_UART_MODULE should be a different port, or removed"
-#endif
 }
 
 void board_set_buzzer(bool enable)

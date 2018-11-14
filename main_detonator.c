@@ -40,9 +40,12 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 
 	unsigned char buffer[64];
 
-	int read = board_fts_read(buffer, sizeof(buffer));
+	int read = board_fts_read(buffer, sizeof(buffer) - 1);
 	if (read > 0)
-	 printf ("%s", buffer);
+	{
+		buffer [read] = 0;
+		printf ("%s", buffer);
+	}
 
 	dispatcher_add(context, dispatcher, TIMEOUT_NEVER);
 }
