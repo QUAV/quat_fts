@@ -53,10 +53,10 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
  ;                        Se conf. en input pull in, no necesita alt. func.
  ;                        Necesita un pin TIMx_CHx, esperemos que el TIM1 no se necesario para otra cosa
 
-;PC4 - 24 - Transistor de bateria
-
-;PC5 - 25 - Deteccion external power (12V)
-
 
  PB12 -33 - CAN2 RX OK -> alt. como CAN2
  PB13 -34 - CAN2 TX
+
+ ;PC4 - 24 - Transistor de bateria
+ ;PC5 - 25 - Deteccion external power (12V)
+ 
