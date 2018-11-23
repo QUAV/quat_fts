@@ -96,6 +96,7 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 	mavlink_msg_heartbeat_t *beat;
 	mavlink_msg_cmd_ack_t *ack;
     mavlink_msg_highres_imu_t* himu;
+	mavlink_global_position_int_t* pos;
 	// FIXME: check hdr seq, sender, etc.
 	switch(hdr->MsgId)
 	{
@@ -119,6 +120,10 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 		case MAVLINK_MSG_ID_COMMAND_ACK:
 			ack = (mavlink_msg_cmd_ack_t *)msg->Payload;
 			printf("ack cmd %d -> %d\n", ack->CmdId, ack->Result);
+			break;
+        case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
+            pos = (mavlink_global_position_int_t*)msg->Payload;
+            printf("p: %d  %d %d\n", pos->alt, pos->lat, pos->lon);
 			break;
 		default:
 			printf("id %d\n", hdr->MsgId);

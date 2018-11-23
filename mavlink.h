@@ -73,6 +73,18 @@ typedef struct __packed
 	unsigned char Result;
 } mavlink_msg_cmd_ack_t;
 
+typedef struct  {
+	unsigned int time_boot_ms; // [ms] Timestamp (time since system boot).
+	signed int lat; // [degE7] Latitude, expressed
+	signed int lon; // [degE7] Longitude, expressed
+	signed int alt; // [mm] Altitude (MSL). Note that virtually all GPS modules provide both WGS84 and MSL.
+	signed int relative_alt; // [mm] Altitude above ground
+	signed short vx;       // [cm/s] Ground X Speed (Latitude, positive north)
+	signed short vy;       // [cm/s] Ground Y Speed (Longitude, positive east)
+	signed short vz;       // [cm/s] Ground Z Speed (Altitude, positive down)
+	unsigned short hdg;     // [cdeg] Vehicle heading (yaw angle), 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
+} mavlink_global_position_int_t;
+
 typedef enum
 {
 	MAV_STATE_UNINIT = 0,

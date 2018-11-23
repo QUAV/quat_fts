@@ -26,11 +26,15 @@ static int _current_flash_time = 500;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
+	unsigned int max_fall_mm;
 	unsigned int warn_to_panic_ms;
 	} _conf = { 
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
-	.warn_to_panic_ms = 2000 };
+	//.max_fall_mm = 600,
+	//.warn_to_panic_ms = 400};
+	.max_fall_mm = 4000,
+	.warn_to_panic_ms = 800};
 
 
 static dispatcher_t _led_off_dispatcher;
@@ -52,6 +56,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 //static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
+static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 
 static void _request_motor_disabling();
 static void _detonator_fire();
@@ -101,10 +106,13 @@ void main()
 	mavlink_add_handler(&heartbeat_handler);
 	mavlink_handler_t att_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_ATTITUDE, .Func = _attitude };
 	mavlink_add_handler(&att_handler);
-	mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
-	mavlink_add_handler(&imu2_handler);
+	mavlink_handler_t position_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_GLOBAL_POSITION_INT, .Func = _position };
+	mavlink_add_handler(&position_handler);
+	//mavlink_handler_t imu2_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_SCALED_IMU2, .Func = _imu2 };
+	//mavlink_add_handler(&imu2_handler);
 	//mavlink_handler_t highres_imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HIGHRES_IMU, .Func = _highres_imu };
 	//mavlink_add_handler(&highres_imu_handler);
+
 
 	detonator_link_initialize(&_context, _detonator_fire);
 	//board_uavcan_init ();
@@ -135,14 +143,19 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 //			.Param2 = 250 };
 //		mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
 
-	mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
+	/*mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_EXTRA1,	// requests attitude msg
 		.MsgRate = 10, .StartStop = 1 };
-	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req1, sizeof(req1));
+	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req1, sizeof(req1));*/
 
-	mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
+	/*mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_RAW_SENSORS,
 		.MsgRate = 5, .StartStop = 1 };
+	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req2, sizeof(req2));*/
+
+	mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
+		.StreamId = MAV_DATA_STREAM_POSITION,
+		.MsgRate = 10, .StartStop = 1 };
 	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req2, sizeof(req2));
 
 	dispatcher_add(context, dispatcher, 5000);
@@ -289,8 +302,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
 
-
-static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+/*static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
 	static unsigned fall_time = 0;
 
@@ -299,7 +311,6 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
 		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
 	
-
 	// IMU telemetry  frequency must be 5 Hz; scale is cm
 	int min_acc = 26;	// cm/sg^2 experimental measure while falling
 	bool acc_ready = acc > (min_acc * min_acc);
@@ -316,9 +327,10 @@ static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, un
 
 	//if (!acc_ready)
 	//	_led_flash(LED_AMBER, 500);	// only in pixhawk boards
-}
+}*/
+
 /*
-// APM sends this message at just 1 Hz!
+// APM sends this message at just 1 Hz
 static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
 	static unsigned fall_time = 0;
@@ -342,6 +354,58 @@ static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *
 		_led_flash(LED_AMBER, 500); // only in pixhawk boards
 }
 */
+
+typedef struct
+{
+	unsigned int time;
+	signed int   alt;
+} altitudes_t;
+
+
+// cyclical array
+static altitudes_t _alt_historical[32] = {};
+static int _alt_idx = 0; 
+
+static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+{
+	mavlink_global_position_int_t *data = (mavlink_global_position_int_t *)msg->Payload;
+	
+	printf ("%d: %d\n", data->time_boot_ms, data->alt);
+
+	const int pos_hz = 10;
+    const int time_margin = 200;	// ms
+	int span = _conf.warn_to_panic_ms / (1000 / pos_hz);
+	
+	int curr_idx = _alt_idx & 31;
+	int prev_idx = (_alt_idx - span) & 31; 
+	_alt_historical [curr_idx].time = data->time_boot_ms;
+	_alt_historical [curr_idx].alt  = data->alt;
+	_alt_idx = (_alt_idx + 1) & 31;
+
+	unsigned int elapsed = _alt_historical [curr_idx].time - _alt_historical [prev_idx].time;
+	if ((elapsed > (_conf.warn_to_panic_ms - time_margin)) && (elapsed < (_conf.warn_to_panic_ms + time_margin)))	// boot situation or communications problem
+	{
+		int delta_alt = _alt_historical [curr_idx].alt - _alt_historical [prev_idx].alt;
+		// Try to be sure that delta altitude is not measurement error: check the sign of the historical deltas
+  		int correct_signs = 0;
+		int i;
+		for (i=0; i < span; i++)
+		{
+			int d = _alt_historical [(prev_idx + i + 1) & 31].alt - _alt_historical [(prev_idx + i) & 31].alt;
+			correct_signs += (d < 0) ? 1 : 0;
+		}
+		if ((delta_alt > _conf.max_fall_mm) && (correct_signs > (int)(span * 0.9f)))
+		{
+			if (!_already_fired)
+			{
+				_fire_cause = FIRED_FALL;
+				_fire();
+			}
+			printf("FALLING\n");
+		}
+	}
+}
+
 static void _request_motor_disabling()
 {
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
@@ -374,6 +438,10 @@ static void _fire()
        		_led_flash(LED_BLUE, 500);
            	board_fire(true);
 
+			dispatcher_add(&_context, &_fire_off_dispatcher, 600);
+
+			datalog_flash(_fire_cause);
+
 			_already_fired = true; 
             printf("FIRE!\n");	
 		}
@@ -381,10 +449,6 @@ static void _fire()
 		{
 			printf("FIRE but NOT ARMED\n");
 		}
-
- 		dispatcher_add(&_context, &_fire_off_dispatcher, 600);
-
-		datalog_flash(_fire_cause);
 	}
 }
 
