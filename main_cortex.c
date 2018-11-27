@@ -474,8 +474,14 @@ static void _fire_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
 
 static led_mask_t _leds_on = 0;
 
+#define LED_FIRED_COLOR  LED_BLUE 
+
 static void _led_flash(led_mask_t mask, unsigned time)
 {
+	static bool fired_latch = false;
+	if (fired_latch && mask)		// once fired, will not change anymore
+		mask = LED_FIRED_COLOR;
+
 	_current_color = mask;
 	_current_flash_time = time;
 	if (mask & LED_RGB)
@@ -488,6 +494,10 @@ static void _led_flash(led_mask_t mask, unsigned time)
 		board_set_led(mask, -1);
 		_leds_on |= mask;
 	}
+
+	if (mask == LED_FIRED_COLOR)
+		fired_latch = true;
+
 	dispatcher_add(&_context, &_led_off_dispatcher, time);
 }
 
