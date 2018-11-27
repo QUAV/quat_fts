@@ -23,18 +23,17 @@ static int _fire_cause = FIRED_NOT;
 static led_mask_t _current_color = LED_RED;
 static int _current_flash_time = 500;
 
-
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
-	unsigned int max_fall_mm;
+	int max_fall_mm;
 	unsigned int warn_to_panic_ms;
 	} _conf = { 
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
-	//.max_fall_mm = 600,
-	//.warn_to_panic_ms = 400};
-	.max_fall_mm = 4000,
-	.warn_to_panic_ms = 800};
+	.max_fall_mm = 12000,
+	.warn_to_panic_ms = 2000};
+	//.max_fall_mm = 4000, // small fall field testing
+	//.warn_to_panic_ms = 800};
 
 
 static dispatcher_t _led_off_dispatcher;
@@ -362,38 +361,54 @@ typedef struct
 } altitudes_t;
 
 
-// cyclical array
+// Cyclical array
 static altitudes_t _alt_historical[32] = {};
-static int _alt_idx = 0; 
+static int         _alt_idx = 0; 
+static bool        _alt_init = false;
 
 static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
 	mavlink_global_position_int_t *data = (mavlink_global_position_int_t *)msg->Payload;
 	
-	printf ("%d: %d\n", data->time_boot_ms, data->alt);
+	if (!_alt_init)
+	{
+		int i;
+		for (i=0; i<32; i++)
+		{
+			_alt_historical [i].time = data->time_boot_ms;
+			_alt_historical [i].alt  = data->alt;
+		}
+		_alt_init = true;
+	}
 
 	const int pos_hz = 10;
-    const int time_margin = 200;	// ms
+    const int time_margin = 100;	// ms
 	int span = _conf.warn_to_panic_ms / (1000 / pos_hz);
 	
 	int curr_idx = _alt_idx & 31;
 	int prev_idx = (_alt_idx - span) & 31; 
 	_alt_historical [curr_idx].time = data->time_boot_ms;
 	_alt_historical [curr_idx].alt  = data->alt;
+
+	//printf ("%d, %d, %d, %d\n", data->time_boot_ms, data->alt, _alt_historical [prev_idx].time, _alt_historical [prev_idx].alt);
+
 	_alt_idx = (_alt_idx + 1) & 31;
 
 	unsigned int elapsed = _alt_historical [curr_idx].time - _alt_historical [prev_idx].time;
 	if ((elapsed > (_conf.warn_to_panic_ms - time_margin)) && (elapsed < (_conf.warn_to_panic_ms + time_margin)))	// boot situation or communications problem
 	{
 		int delta_alt = _alt_historical [curr_idx].alt - _alt_historical [prev_idx].alt;
+		delta_alt = -delta_alt; // fall sign
 		// Try to be sure that delta altitude is not measurement error: check the sign of the historical deltas
   		int correct_signs = 0;
 		int i;
-		for (i=0; i < span; i++)
+		for (i=0; i < (span - 1); i++)
 		{
 			int d = _alt_historical [(prev_idx + i + 1) & 31].alt - _alt_historical [(prev_idx + i) & 31].alt;
 			correct_signs += (d < 0) ? 1 : 0;
 		}
+       	printf ("delta %d, max_fall %d, signs %d\n", delta_alt, _conf.max_fall_mm, correct_signs);
+
 		if ((delta_alt > _conf.max_fall_mm) && (correct_signs > (int)(span * 0.9f)))
 		{
 			if (!_already_fired)
@@ -401,7 +416,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 				_fire_cause = FIRED_FALL;
 				_fire();
 			}
-			printf("FALLING\n");
+			printf("FALLING (%d)\n", correct_signs);
 		}
 	}
 }
@@ -434,7 +449,7 @@ static void _fire()
 		{
 			datalog_recording (false);
 			board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
-			_request_motor_disabling();
+			//_request_motor_disabling();
        		_led_flash(LED_BLUE, 500);
            	board_fire(true);
 
