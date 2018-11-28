@@ -1,4 +1,9 @@
 
+Problemas:
+
+- El armado se realiza solo en el paso de STANDBY->ACTIVE
+  Creo que hace asi por que si se rearma el aparato pasa por ACTIVE de manera espurea
+
 Cambios placa:
 - Cristal a 12 Mhz
 - Invertir LED
@@ -59,4 +64,3 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
 
  ;PC4 - 24 - Transistor de bateria
  ;PC5 - 25 - Deteccion external power (12V)
- 

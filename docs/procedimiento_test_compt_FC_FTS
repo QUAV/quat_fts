@@ -1,0 +1,18 @@
+
+
+Puntos a observar para saber si el FTS es compatible con un FC/fw concreto.
+
+* El FTS debe dispararse si:
+
+ - Se desconecta del FC durante 1.5sg, armado
+ - Se gira el aparato mas de 114 grad., armado
+ - Se gira el aparato mas de 45 grad. durante 2 sg, armado
+ - Cae libremente durante 1.7 sg, armado
+ - Se dispara el detonador remoto, armado o desarmado
+
+* Es importante comprobar que estas condiciones no ocurren con el FC desarmado
+
+* El log disponible en el detonador debe mostrar
+
+ - 10 mensajes IMU por segundo
+ - 10 mensajes POS por segundo  
