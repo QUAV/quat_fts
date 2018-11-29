@@ -144,10 +144,10 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 //			.Param2 = 250 };
 //		mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
 
-	/*mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
+	mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_EXTRA1,	// requests attitude msg
 		.MsgRate = 10, .StartStop = 1 };
-	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req1, sizeof(req1));*/
+	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req1, sizeof(req1));
 
 	/*mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_RAW_SENSORS,
@@ -401,8 +401,6 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	_alt_historical [curr_idx].time = data->time_boot_ms;
 	_alt_historical [curr_idx].alt  = data->alt;
 
-	//printf ("%d, %d, %d, %d\n", data->time_boot_ms, data->alt, _alt_historical [prev_idx].time, _alt_historical [prev_idx].alt);
-
 	_alt_idx = (_alt_idx + 1) & 31;
 
 	unsigned int elapsed = _alt_historical [curr_idx].time - _alt_historical [prev_idx].time;
@@ -418,7 +416,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 			int d = _alt_historical [(prev_idx + i + 1) & 31].alt - _alt_historical [(prev_idx + i) & 31].alt;
 			correct_signs += (d < 0) ? 1 : 0;
 		}
-       	printf ("state %d armed %d delta %d, signs %d\n", _curr_state, _armed, delta_alt, correct_signs);
+       	//printf ("state %d armed %d delta %d, signs %d\n", _curr_state, _armed, delta_alt, correct_signs);
 
 		if ((delta_alt > _conf.max_fall_mm) && (correct_signs > (int)(span * 0.9f)))
 		{
