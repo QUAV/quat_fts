@@ -23,16 +23,21 @@ static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
 static led_mask_t _current_color = LED_RED;
 static int _current_flash_time = 500;
+static int _last_height = 0;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
+	int safety_height_mm; 
+	int deadman_ms;
 	int max_fall_mm;
 	unsigned int warn_to_panic_ms;
 	} _conf = { 
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
+	.safety_height_mm = 30000,
+	.deadman_ms = 2000,
 	.max_fall_mm = 10000,
-	.warn_to_panic_ms = 1700};	// APM will go from ACTIVE to STANDBY after 2 seconds of low gas, and disarm
+	.warn_to_panic_ms = 1700};	// APM will go from ACTIVE to STANDBY after 2 seconds of low gas, even changing state to standby
 	                            // we try to detect the falling case a bit earlier
 	//.max_fall_mm = 4000, // small fall field testing
 	//.warn_to_panic_ms = 800};
@@ -44,7 +49,7 @@ static void _led_flash(led_mask_t mask, unsigned time);
 
 static dispatcher_t _fire_off_dispatcher;
 
-static void _do_arm (bool arm);
+static void _set_armed (bool arm);
 static void _fire();
 static void _fire_off();
 
@@ -165,7 +170,7 @@ static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispat
 
 static void _detonator_fire()
 {
-	_do_arm (true);	// manual detonation happens no matter what
+	_set_armed (true);	// manual detonation happens no matter what
 
 	_fire_cause = FIRED_MANUAL;
 	_fire();
@@ -175,7 +180,7 @@ static void _detonator_fire()
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	if (!_already_fired) 
+	if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
 	{
 		_fire_cause = FIRED_DEADMAN;
 		_fire();
@@ -189,69 +194,50 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 	static const unsigned char *_autopilot[] = { "generic", "rsvd1", "slugs", "ardupilot", "openpilot", "gen5" ,"gen6", "gen7", "invalid", "ppz", "udb", "flexipilot", "px4", "smacc", "autoquad", "armazila", "aerob", "asluav", "smartap" };
 	static const unsigned char *_frame_type[] = { "generic", "fixed-wing", "quad", "coaxial", "heli", "tracker", "gcs", "airship", "ballon", "rocket", "rover", "boat", "submarine", "hexa", "octo", "tri", "flapping-wing", "kite", "onboard", "vtol-duo", "vtol-quad", "vtol-tilt", "res22", "res23", "res24" ,"res25", "gimbal", "adsb" }; 
 
-	//static bool _stand_by_delay = false;
-	static unsigned int _armed_delay = 0;
-
 	mavlink_msg_heartbeat_t *data = (mavlink_msg_heartbeat_t *)msg->Payload;
 	mavlink_state_t state = data->SystemStatus;
-	
-	dispatcher_add(&_context, &_deadman_dispatcher, 1800); // 1500	
+
+	// WARNING: APM flight controller is reported to stop the heartbeat for seconds in his startup routines
+	dispatcher_add(&_context, &_deadman_dispatcher, _conf.deadman_ms);	
 	_curr_state = state;
+	_set_armed((data->BaseMode & MAV_MODE_FLAG_SAFETY_ARMED) != 0);
+	printf("armed %d, fired %d, height %d m, state ", _armed, _already_fired, _curr_state, _last_height  / 1000); 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
 			_led_flash(LED_RED, 50);
-            printf("* boot\n"); 
+            printf("BOOT\n"); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
 			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	
-            printf("* calibration\n"); 
+            printf("CALIBRATION\n"); 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
 			_led_flash(LED_GREEN, 500);	
 
-			printf("* standby\n");
-            _armed_delay = 0;
+			printf("STANDBY\n");
 			if (_prev_state != MAV_STATE_STANDBY)
 			{
-				//if (_stand_by_delay)
-				//	_stand_by_delay = false; // ?
-				//else
-				//{
-#ifdef DEBUG
-					printf("autopilot: %s\n", _autopilot[data->Autopilot]);
-					printf("type: %s\n", _frame_type[data->Type]);
-					printf("mavlink version %d\n", data->MavlinkVersion);
-#endif
-					dispatcher_add(&_context, &_mavlink_dispatcher, 100);
+				printf("autopilot: %s\n", _autopilot[data->Autopilot]);
+				printf("type: %s\n", _frame_type[data->Type]);
+				printf("mavlink version %d\n", data->MavlinkVersion);
 
-					_do_arm (false);
- 
-					_prev_state = MAV_STATE_STANDBY;
-				//}
+				dispatcher_add(&_context, &_mavlink_dispatcher, 100);
+				_prev_state = MAV_STATE_STANDBY;
 			}
 			break;
 
 		case MAV_STATE_ACTIVE:	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			printf(state == MAV_STATE_ACTIVE ? "* active\n" : "* critical\n");
+			printf(state == MAV_STATE_ACTIVE ? "ACTIVE\n" : "CRITICAL\n");
 			_led_flash(LED_RED | LED_GREEN, 500); 
-
-			if ((_prev_state == MAV_STATE_ACTIVE) || (_prev_state == MAV_STATE_CRITICAL))
-			{
-				_armed_delay++;
-				if (_armed_delay == 2)	// armed only after 2/3 seconds of being active
-					_do_arm (true);
-			}
-
-			//_stand_by_delay = true;
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
-   			printf("* emergency\n");
+   			printf("EMERGENCY\n");
 			// should we just fire, here?
 			if (_armed)
 				_led_flash(LED_RED | LED_GREEN, 50);	
@@ -262,19 +248,22 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 			break;
 
 		case MAV_STATE_FLIGHT_TERMINATION:	// NOTE: arducopter NEVER sends this state
-   			printf("* termination\n");
-			if (!_already_fired)
+   			printf("TERMINATION\n");
+			/*if (!_already_fired)
 			{
 				_fire_cause = FIRED_FLIGHT_CONTROLLER;
 				_fire();
-			}
-			printf("FLIGHT CONTROLLER TERMINATION\n");
+			}*/
+			printf("*FLIGHT CONTROLLER TERMINATION*\n");
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_POWEROFF:
+			printf("POWER OFF\n");
 			// NOTHING
 			break;
+		default:
+			printf("UNKNOWN\n");
 	}
 }
 
@@ -297,7 +286,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 	if (!panic_ready || warn_time >= _conf.warn_to_panic_ms)
 	{
-		if (!_already_fired)
+		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
 		{
 			_fire_cause = FIRED_BAD_ATTITUDE;
 			if (!panic_ready)
@@ -327,7 +316,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	fall_time = acc_ready ? 0 : (fall_time + 200);
 	if (fall_time > _conf.warn_to_panic_ms)
 	{ 
-		if (!_already_fired)
+		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
 		{
 			_fire_cause = FIRED_FALL;
 			_fire();
@@ -352,7 +341,7 @@ static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *
 	fall_time = acc_ready ? 0 : (fall_time + 100);
 	if (fall_time > _conf.warn_to_panic_ms)
 	{
-		if (!_already_fired)
+		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
 		{
 			_fire_cause = FIRED_FALL;
 			_fire();
@@ -381,6 +370,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 {
 	mavlink_global_position_int_t *data = (mavlink_global_position_int_t *)msg->Payload;
 	
+    _last_height = data->alt;
 	if (!_alt_init)
 	{
 		int i;
@@ -420,7 +410,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 		if ((delta_alt > _conf.max_fall_mm) && (correct_signs > (int)(span * 0.9f)))
 		{
-			if (!_already_fired)
+			if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
 			{
 				_fire_cause = FIRED_FALL;
 				_fire();
@@ -440,7 +430,7 @@ static void _request_motor_disabling()
 }
 
 				
-static void _do_arm (bool arm)
+static void _set_armed (bool arm)
 {
 	board_enable_charges(arm);
 	_armed = arm;
