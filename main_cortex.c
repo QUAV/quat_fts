@@ -201,23 +201,23 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 	dispatcher_add(&_context, &_deadman_dispatcher, _conf.deadman_ms);	
 	_curr_state = state;
 	_set_armed((data->BaseMode & MAV_MODE_FLAG_SAFETY_ARMED) != 0);
-	printf("armed %d, fired %d, height %d m, state ", _armed, _already_fired, _curr_state, _last_height  / 1000); 
+	printf("arm %d, fire %d, hei %d m, st %d\n", _armed, _already_fired, _last_height  / 1000, _curr_state); 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
 			_led_flash(LED_RED, 50);
-            printf("BOOT\n"); 
+            //printf("BOOT\n"); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
 			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	
-            printf("CALIBRATION\n"); 
+            //printf("CALIBRATION\n"); 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
 			_led_flash(LED_GREEN, 500);	
 
-			printf("STANDBY\n");
+			//printf("STANDBY\n");
 			if (_prev_state != MAV_STATE_STANDBY)
 			{
 				printf("autopilot: %s\n", _autopilot[data->Autopilot]);
@@ -231,13 +231,13 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 
 		case MAV_STATE_ACTIVE:	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			printf(state == MAV_STATE_ACTIVE ? "ACTIVE\n" : "CRITICAL\n");
+			//printf(state == MAV_STATE_ACTIVE ? "ACTIVE\n" : "CRITICAL\n");
 			_led_flash(LED_RED | LED_GREEN, 500); 
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
-   			printf("EMERGENCY\n");
+   			//printf("EMERGENCY\n");
 			// should we just fire, here?
 			if (_armed)
 				_led_flash(LED_RED | LED_GREEN, 50);	
@@ -248,22 +248,19 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 			break;
 
 		case MAV_STATE_FLIGHT_TERMINATION:	// NOTE: arducopter NEVER sends this state
-   			printf("TERMINATION\n");
-			/*if (!_already_fired)
-			{
-				_fire_cause = FIRED_FLIGHT_CONTROLLER;
-				_fire();
-			}*/
-			printf("*FLIGHT CONTROLLER TERMINATION*\n");
+   			//printf("TERMINATION\n");
+			// should we just fire, here?
+			//printf("*FLIGHT CONTROLLER TERMINATION*\n");
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_POWEROFF:
-			printf("POWER OFF\n");
+			//printf("POWER OFF\n");
 			// NOTHING
 			break;
 		default:
-			printf("UNKNOWN\n");
+			//printf("UNKNOWN\n");
+			break;
 	}
 }
 
@@ -295,6 +292,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 		}
 	}
 
+	printf("TIP OVER");
 	//if (!warn_ready)
 	//	_led_flash(LED_AMBER, 500);	// only on pixhawk boards
 
