@@ -289,10 +289,10 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 			if (!panic_ready)
 				_fire_cause = FIRED_ATTITUDE_ROLL;
 			_fire();
+           	printf("TIP OVER\n");
 		}
 	}
 
-	printf("TIP OVER");
 	//if (!warn_ready)
 	//	_led_flash(LED_AMBER, 500);	// only on pixhawk boards
 
@@ -318,6 +318,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 		{
 			_fire_cause = FIRED_FALL;
 			_fire();
+           	printf("TIP OVER\n");
 		}
        	printf("FALLING\n");
 	}
