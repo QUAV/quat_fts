@@ -23,18 +23,17 @@ static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
 static led_mask_t _current_color = LED_RED;
 static int _current_flash_time = 500;
-static int _last_height = 0;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
-	int safety_height_mm; 
+	//int safety_height_mm; // not doable for now, needs a distance sensor
 	int deadman_ms;
 	int max_fall_mm;
 	unsigned int warn_to_panic_ms;
 	} _conf = { 
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
-	.safety_height_mm = 30000,
+	//.safety_height_mm = 30000,
 	.deadman_ms = 2000,
 	.max_fall_mm = 10000,
 	.warn_to_panic_ms = 1700};	// APM will go from ACTIVE to STANDBY after 2 seconds of low gas, even changing state to standby
@@ -180,7 +179,7 @@ static void _detonator_fire()
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
+	if (!_already_fired)
 	{
 		_fire_cause = FIRED_DEADMAN;
 		_fire();
@@ -201,7 +200,7 @@ static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *ms
 	dispatcher_add(&_context, &_deadman_dispatcher, _conf.deadman_ms);	
 	_curr_state = state;
 	_set_armed((data->BaseMode & MAV_MODE_FLAG_SAFETY_ARMED) != 0);
-	printf("arm %d, fire %d, hei %d m, st %d\n", _armed, _already_fired, _last_height  / 1000, _curr_state); 
+	printf("arm %d, fire %d, st %d\n", _armed, _already_fired,  _curr_state); 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
@@ -283,7 +282,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 	if (!panic_ready || warn_time >= _conf.warn_to_panic_ms)
 	{
-		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
+		if (!_already_fired)
 		{
 			_fire_cause = FIRED_BAD_ATTITUDE;
 			if (!panic_ready)
@@ -369,7 +368,6 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 {
 	mavlink_global_position_int_t *data = (mavlink_global_position_int_t *)msg->Payload;
 	
-    _last_height = data->alt;
 	if (!_alt_init)
 	{
 		int i;
@@ -409,7 +407,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 		if ((delta_alt > _conf.max_fall_mm) && (correct_signs > (int)(span * 0.9f)))
 		{
-			if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
+			if (!_already_fired)
 			{
 				_fire_cause = FIRED_FALL;
 				_fire();
