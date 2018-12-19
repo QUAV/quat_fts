@@ -49,6 +49,10 @@ void board_comms_init(dispatcher_context_t *context, uart_control_block_t *cb);
 int board_comms_read(unsigned char *buffer, unsigned long length);
 int board_comms_write(unsigned char *buffer, unsigned long length);
 
+int board_battery_voltage ();	// in tenths of volt
+bool board_detect_ext_power ();
+void board_enable_battery(bool enable);
+
 void board_set_buzzer(bool enable);
 void board_set_led(led_mask_t mask, led_mask_t value);
 void board_set_output(output_mask_t mask, output_mask_t value);

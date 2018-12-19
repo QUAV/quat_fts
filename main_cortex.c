@@ -56,8 +56,10 @@ static dispatcher_t _mavlink_dispatcher;
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static dispatcher_t _deadman_dispatcher;
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
+static dispatcher_t _shutdown_dispatcher;
+static void _shutdown_handler(dispatcher_context_t *context, dispatcher_t *dispatcher);
 
-static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
+static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
 //static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length);
@@ -65,8 +67,10 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 
 static void _request_motor_disabling();
 static void _detonator_fire();
+static void _shutdown ();
 
 static dispatcher_context_t _context;
+
 
 void main()
 {
@@ -85,11 +89,16 @@ void main()
 
 	printf("\n\nBoot!\n");
 
+	//int batt_v = board_battery_voltage ();	// in tenths of volt
+	//bool ext_p = board_detect_ext_power ();
+	//board_enable_battery(true);
+	// WARNING: Line detection only works when the battery is enabled
+	//thread_sleep(100);
+
 	_detonator = board_detect_lines (0) && board_detect_lines (1);
 	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
-    //if (_state == MAV_STATE_BOOT || _state == MAV_STATE_CALIBRATING || _state == MAV_STATE_STANDBY)
+    //if (!_detonator)
 	//	_request_motor_disabling (); 
-
 	
    	/* Fire test
 	thread_sleep(1000);
@@ -106,8 +115,9 @@ void main()
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
 	dispatcher_create(&_deadman_dispatcher, nullptr, _deadman_handler, nullptr);
+	//dispatcher_create(&_shutdown_dispatcher, nullptr, _shutdown_handler, nullptr);
 
-	mavlink_handler_t heartbeat_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HEARTBEAT, .Func = _heartbeat };
+	mavlink_handler_t heartbeat_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HEARTBEAT, .Func = _fc_heartbeat };
 	mavlink_add_handler(&heartbeat_handler);
 	mavlink_handler_t att_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_ATTITUDE, .Func = _attitude };
 	mavlink_add_handler(&att_handler);
@@ -122,6 +132,8 @@ void main()
 	detonator_link_initialize(&_context, _detonator_fire);
 	//board_uavcan_init ();
 	 
+	// Check if we have to shutdown the FTS
+	//dispatcher_add(&_context, &_shutdown_dispatcher, 1000);	
 
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
@@ -135,6 +147,11 @@ void main()
 		if (!dispatcher_dispatch(&_context, 1600)) //_current_flash_time))
 			_led_flash(_current_color, 1600); //_current_flash_time);
 	}
+}
+
+static void _shutdown ()
+{
+	board_enable_battery(false);
 }
 
 
@@ -187,8 +204,13 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 	printf("DEADMAN TIMEOUT\n");
 }
 
+static void _shutdown_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
+{
 
-static void _heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+	dispatcher_add(context, dispatcher, 1000);	
+}
+
+static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
 	static const unsigned char *_autopilot[] = { "generic", "rsvd1", "slugs", "ardupilot", "openpilot", "gen5" ,"gen6", "gen7", "invalid", "ppz", "udb", "flexipilot", "px4", "smacc", "autoquad", "armazila", "aerob", "asluav", "smartap" };
 	static const unsigned char *_frame_type[] = { "generic", "fixed-wing", "quad", "coaxial", "heli", "tracker", "gcs", "airship", "ballon", "rocket", "rover", "boat", "submarine", "hexa", "octo", "tri", "flapping-wing", "kite", "onboard", "vtol-duo", "vtol-quad", "vtol-tilt", "res22", "res23", "res24" ,"res25", "gimbal", "adsb" }; 
@@ -292,9 +314,6 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 		}
 	}
 
-	//if (!warn_ready)
-	//	_led_flash(LED_AMBER, 500);	// only on pixhawk boards
-
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
 
@@ -321,9 +340,6 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 		}
        	printf("FALLING\n");
 	}
-
-	//if (!acc_ready)
-	//	_led_flash(LED_AMBER, 500);	// only in pixhawk boards
 }*/
 
 /*
@@ -346,9 +362,6 @@ static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *
 		}
        	printf("FALLING\n");
 	}
-
-	if (!acc_ready)
-		_led_flash(LED_AMBER, 500); // only in pixhawk boards
 }
 */
 
@@ -445,7 +458,7 @@ static void _fire()
 		{
 			datalog_recording (false);
 			board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
-			//_request_motor_disabling();
+			_request_motor_disabling();
        		_led_flash(LED_BLUE, 500);
            	board_fire(true);
 

@@ -32,8 +32,8 @@ void __board_initialize()
 	#define FIRE_1_PIN PB0
 	#define FIRE_2_PIN PB1
 
-	gpio_pin_config(PB7, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 1 
-	gpio_pin_config(PB5, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Detect 2
+	gpio_pin_config(PB7, GPIO_MODE_INPUT);	// Detect 1 
+	gpio_pin_config(PB5, GPIO_MODE_INPUT);	// Detect 2
 	#define  DETECT_PIN_1 PB7	
 	#define  DETECT_PIN_2 PB5	
 
@@ -42,6 +42,15 @@ void __board_initialize()
 
 	gpio_pin_config(PB6, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// ARMED
 	#define  ARMED_PIN PB6
+
+   gpio_pin_config(PC5, GPIO_MODE_INPUT);	// Ext. 12V detect 0/1
+	#define  EXTP_PIN PC5	
+
+    gpio_pin_config(PC0, GPIO_MODE_INPUT | GPIO_MODEF_PULL_DOWN);	// Batt sense (adc)
+	#define  BATT_SENSE_PIN PC0	
+
+	gpio_pin_config(PC4, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Battery switch
+	#define  BATT_PIN PC4	
 
 	gpio_pin_config(PA11, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 RX REMAP 0
 	gpio_pin_config(PA12, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 TX REMAP 0
@@ -102,6 +111,22 @@ void __board_initialize()
 #error "Board not supported"
 #endif
 
+}
+
+int board_battery_voltage ()	// in tenths of volt
+{
+	bool threshold = hal_gpio_pin(BATT_SENSE_PIN);
+	return threshold ? 84 : 60;	// hack until we have adc 
+}
+
+bool board_detect_ext_power ()
+{
+	return hal_gpio_pin(EXTP_PIN);
+}
+
+void board_enable_battery(bool enable)
+{
+	hal_gpio_pin_set(BATT_PIN, enable);
 }
 
 void board_set_buzzer(bool enable)
