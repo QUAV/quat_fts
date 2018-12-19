@@ -1,25 +1,22 @@
 
-Problemas:
-
-- El armado se realiza solo en el paso de STANDBY->ACTIVE
-  Creo que hace asi por que si se rearma el aparato pasa por ACTIVE de manera espurea
-
-Cambios placa:
-- Cristal a 12 Mhz
-- Invertir LED
-- Detect 2 a PB7, pin 59
-- UART4 a USART2 -> PA2, PA3
-- Arreglar diodos del reves
-- Añadir sirena, 12v 1200 miliamps en PC10, pin 29
-- Carga bateria: transistor de conexion a la bateria del FTS
-- Comprobar terminadores CAN: estan? deberian estar?
-- Ajustar footprint led
 
 
 Micro: STM32F105RCT6
 
 Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
 
+* Sistema de alimentacion
+- 2 entradas de alimentacion: batt (8V) y ext (12v)
+- En reposo la bateria debe estar desconectada por trans.
+- Secuencia arranque:
+  - Arranque con external power
+  - Detecc. nivel de bateria
+  - Si la batt. esta bien, enable batt power
+
+ - Apagado
+   - Si lleva 6 min sin comunicacion
+   - Si se detecta que ya no hay ext. power (12V detect)
+   - Secuencia apagado: Cortar bateria
 
 * Pinout
 
@@ -49,7 +46,10 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
  PA11 - 44 - CAN1RX OK
  PA12 - 45 - CAN1TX
 
- PC0 (8), <- input Voltage
+ PC0 (8) <- input Voltage
+
+ PC4 - 24 - Transistor de bateria
+ PC5 - 25 - Deteccion external power (12V)
 
 
  ;PA8  - 41 - PPM (TIM1 CH1) -> in info servos, necesario decodificar! consultar problemas de trans. con Miguel
@@ -61,6 +61,3 @@ Cristal 14.7456  - 14745600 <---- CAMBIAR a 12 o 24 Mhz
 
  PB12 -33 - CAN2 RX OK -> alt. como CAN2
  PB13 -34 - CAN2 TX
-
- ;PC4 - 24 - Transistor de bateria
- ;PC5 - 25 - Deteccion external power (12V)
