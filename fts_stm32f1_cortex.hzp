@@ -204,7 +204,8 @@
     inherited_configurations="PixHawk F103C8;Release;THUMB;Flash" />
   <configuration
     Name="Common"
-    c_preprocessor_definitions="STDOUT_TIMEOUT=100;MAVLINK_SYS_ID=2;MAVLINK_COMP_ID=1" />
+    c_preprocessor_definitions="STDOUT_TIMEOUT=100;MAVLINK_SYS_ID=2;MAVLINK_COMP_ID=1"
+    linker_output_format="bin" />
   <configuration Name="Flash" hidden="Yes" />
   <configuration
     Name="PixHawk F100C8"
