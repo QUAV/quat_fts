@@ -21,12 +21,10 @@ static bool _detonator = false;
 static bool _armed = false;
 static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
-static led_mask_t _current_color = LED_RED;
-static int _current_flash_time = 500;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
-	int automatic_power_off;
+	int automatic_power_off; // min
 	//int safety_height_mm; // not doable for now, needs a distance sensor
 	int deadman_ms;
 	int max_fall_mm;
@@ -45,9 +43,9 @@ static struct {
 	//.warn_to_panic_ms = 800};
 
 
-static dispatcher_t _led_off_dispatcher;
-static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
-static void _led_flash(led_mask_t mask, unsigned time);
+static dispatcher_t _led_flash_dispatcher;
+static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher);
+static void _led_flash_conf(led_mask_t mask, unsigned time);
 
 static dispatcher_t _fire_off_dispatcher;
 
@@ -77,8 +75,8 @@ static dispatcher_context_t _context;
 
 void main()
 {
-	//board_set_led(-1, 0); // switch off all leds
-	//board_set_led(-1, LED_GREEN); // enabled
+	board_set_led(-1, 0); // switch off all leds
+	board_set_led(-1, LED_GREEN); // enabled
 
 	// LED test
 	//board_set_led(-1, LED_GREEN); 
@@ -111,7 +109,7 @@ void main()
   	board_enable_charges(false);*/
 
 	dispatcher_context_create(&_context);
-	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);
+	dispatcher_create(&_led_flash_dispatcher, nullptr, _led_flash, nullptr);
 	dispatcher_create(&_fire_off_dispatcher, nullptr, _fire_off, nullptr);
 
 	mavlink_initialize(&_context);
@@ -130,12 +128,13 @@ void main()
 	//mavlink_handler_t highres_imu_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HIGHRES_IMU, .Func = _highres_imu };
 	//mavlink_add_handler(&highres_imu_handler);
 
-
 	detonator_link_initialize(&_context, _detonator_fire);
 	//board_uavcan_init ();
 	 
+	_led_flash_conf(LED_GREEN, 1600);	// start flashing the leds
+	dispatcher_add(&_context, &_led_flash_dispatcher, 1600);
 	// Check if we have to shutdown the FTS
-	//dispatcher_add(&_context, &_shutdown_dispatcher, 1000);	
+	dispatcher_add(&_context, &_shutdown_dispatcher, 1000);	
 
 #ifdef ENABLE_WATCHDOG
 	wdt_initialize(100);
@@ -146,14 +145,13 @@ void main()
 #ifdef ENABLE_WATCHDOG
 		wdt_reload();
 #endif
-		if (!dispatcher_dispatch(&_context, 1600)) //_current_flash_time))
-			_led_flash(_current_color, 1600); //_current_flash_time);
+		dispatcher_dispatch(&_context, 1600);
 	}
 }
 
 static void _shutdown ()
 {
-	//board_enable_battery(false);
+	board_enable_battery(false);
 
 	while (1);	// world ends here and now
 }
@@ -221,7 +219,7 @@ static void _shutdown_handler(dispatcher_context_t *context, dispatcher_t *dispa
 	if (_shutdown_count >= (_conf.automatic_power_off * 60))
 		_shutdown();
 
-	dispatcher_add(context, dispatcher, 1000);	
+	dispatcher_add(&_context, &_shutdown_dispatcher, 1000);
 }
 
 static void _shutdown_cancel ()
@@ -248,15 +246,15 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
-			_led_flash(LED_RED, 50); 
+			_led_flash_conf(LED_RED, 50); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
-			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	 
+			_led_flash_conf(LED_RED | LED_GREEN | LED_BLUE, 50);	 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
-			_led_flash(LED_GREEN, 500);	
+			_led_flash_conf(LED_GREEN, 500);	
 
 			if (_prev_state != MAV_STATE_STANDBY)
 			{
@@ -271,16 +269,16 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 
 		case MAV_STATE_ACTIVE:	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			_led_flash(LED_RED | LED_GREEN, 500); 
+			_led_flash_conf(LED_RED | LED_GREEN, 500); 
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
 			// should we just fire, here?
 			if (_armed)
-				_led_flash(LED_RED | LED_GREEN, 50);	
+				_led_flash_conf(LED_RED | LED_GREEN, 50);	
 			else
-				_led_flash(LED_GREEN, 50);	
+				_led_flash_conf(LED_GREEN, 50);	
  
 			_prev_state = state;
 			break;
@@ -299,6 +297,47 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	}
 }
 
+
+/*static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+{
+	static unsigned fall_time = 0;
+	mavlink_msg_scaled_imu2_t *data = (mavlink_msg_scaled_imu2_t *)msg->Payload;
+	signed int acc = (((signed int)data->XAcc) * ((signed int)data->XAcc)) +
+		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
+		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
+	// IMU telemetry  frequency must be 5 Hz; scale is cm
+	int min_acc = 26;	// cm/sg^2 experimental measure while falling
+	bool acc_ready = acc > (min_acc * min_acc);
+	fall_time = acc_ready ? 0 : (fall_time + 200);
+	if (fall_time > _conf.warn_to_panic_ms)
+	{ 
+		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
+		{
+			_fire_cause = FIRED_FALL;
+			_fire();
+		}
+       	printf("TIP OVER\n");
+	}
+}
+
+static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
+{
+	static unsigned fall_time = 0;
+	mavlink_msg_highres_imu_h *data = (mavlink_msg_highres_imu_h *)msg->Payload;
+	float acc = data->XAcc * data->XAcc + data->YAcc * data->YAcc + data->ZAcc * data->ZAcc; 
+	bool acc_ready = acc > 300.0f;
+	fall_time = acc_ready ? 0 : (fall_time + 100);
+	if (fall_time > _conf.warn_to_panic_ms)
+	{
+		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
+		{
+			_fire_cause = FIRED_FALL;
+			_fire();
+		}
+       	printf("FALLING\n");
+	}
+}
+*/
 static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {	
 	static unsigned warn_time = 0;
@@ -331,53 +370,6 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	dispatcher_add(&_context, &_mavlink_dispatcher, 1000);	
 }
 
-/*static void _imu2(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
-{
-	static unsigned fall_time = 0;
-
-	mavlink_msg_scaled_imu2_t *data = (mavlink_msg_scaled_imu2_t *)msg->Payload;
-	signed int acc = (((signed int)data->XAcc) * ((signed int)data->XAcc)) +
-		(((signed int)data->YAcc) * ((signed int)data->YAcc)) +
-		(((signed int)data->ZAcc) * ((signed int)data->ZAcc));
-	
-	// IMU telemetry  frequency must be 5 Hz; scale is cm
-	int min_acc = 26;	// cm/sg^2 experimental measure while falling
-	bool acc_ready = acc > (min_acc * min_acc);
-	fall_time = acc_ready ? 0 : (fall_time + 200);
-	if (fall_time > _conf.warn_to_panic_ms)
-	{ 
-		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
-		{
-			_fire_cause = FIRED_FALL;
-			_fire();
-           	printf("TIP OVER\n");
-		}
-       	printf("FALLING\n");
-	}
-}*/
-
-/*
-// APM sends this message at just 1 Hz
-static void _highres_imu(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
-{
-	static unsigned fall_time = 0;
-	mavlink_msg_highres_imu_h *data = (mavlink_msg_highres_imu_h *)msg->Payload;
-
-	float acc = data->XAcc * data->XAcc + data->YAcc * data->YAcc + data->ZAcc * data->ZAcc; 
-
-	bool acc_ready = acc > 300.0f;
-	fall_time = acc_ready ? 0 : (fall_time + 100);
-	if (fall_time > _conf.warn_to_panic_ms)
-	{
-		if ((!_already_fired) && (_last_height >= _conf.safety_height_mm))
-		{
-			_fire_cause = FIRED_FALL;
-			_fire();
-		}
-       	printf("FALLING\n");
-	}
-}
-*/
 
 typedef struct
 {
@@ -473,7 +465,7 @@ static void _fire()
 			datalog_recording (false);
 			board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
 			_request_motor_disabling();
-       		_led_flash(LED_BLUE, 500);
+       		_led_flash_conf(LED_BLUE, 500);
            	board_fire(true);
 
 			dispatcher_add(&_context, &_fire_off_dispatcher, 600);
@@ -495,38 +487,41 @@ static void _fire_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
 	board_fire(false);
 }
 
+static led_mask_t _current_color = LED_GREEN;
+static int _current_flash_time = 500;
 static led_mask_t _leds_on = 0;
 
 #define LED_FIRED_COLOR  LED_BLUE 
 
-static void _led_flash(led_mask_t mask, unsigned time)
+static void _led_flash_conf(led_mask_t color, unsigned time)
 {
 	static bool fired_latch = false;
-	if (fired_latch && mask)		// once fired, will not change anymore
-		mask = LED_FIRED_COLOR;
-
-	_current_color = mask;
+	_current_color = color;
 	_current_flash_time = time;
-	if (mask & LED_RGB)
+
+	if (_current_color == LED_FIRED_COLOR)
+		fired_latch = true;
+
+	if (fired_latch)	// once fired, will not change anymore
+		_current_color = LED_FIRED_COLOR;
+	else
+		_leds_on = _current_color;
+}
+
+static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher)
+{
+	static int on_off = 0;
+
+	if (on_off)
 	{
-		board_set_led(LED_RGB, mask);
-		_leds_on |= LED_RGB;
+		board_set_led(_current_color, -1);
 	}
 	else
 	{
-		board_set_led(mask, -1);
-		_leds_on |= mask;
+		board_set_led(_leds_on, 0);
 	}
 
-	if (mask == LED_FIRED_COLOR)
-		fired_latch = true;
+    on_off ^= 1;
 
-	dispatcher_add(&_context, &_led_off_dispatcher, time);
+	dispatcher_add(&_context, &_led_flash_dispatcher, _current_flash_time);
 }
-
-static void _led_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
-{
-	board_set_led(_leds_on, 0);
-	_leds_on = 0;
-}
- 
