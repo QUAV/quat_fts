@@ -26,11 +26,14 @@ static int _current_flash_time = 500;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
+	int automatic_power_off;
 	//int safety_height_mm; // not doable for now, needs a distance sensor
 	int deadman_ms;
 	int max_fall_mm;
 	unsigned int warn_to_panic_ms;
+
 	} _conf = { 
+    .automatic_power_off = 6,
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
 	//.safety_height_mm = 30000,
@@ -90,10 +93,9 @@ void main()
 	printf("\n\nBoot!\n");
 
 	//int batt_v = board_battery_voltage ();	// in tenths of volt
-	//bool ext_p = board_detect_ext_power ();
-	//board_enable_battery(true);
+	board_enable_battery(true);
 	// WARNING: Line detection only works when the battery is enabled
-	//thread_sleep(100);
+	thread_sleep(100);
 
 	_detonator = board_detect_lines (0) && board_detect_lines (1);
 	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
@@ -115,7 +117,7 @@ void main()
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
 	dispatcher_create(&_deadman_dispatcher, nullptr, _deadman_handler, nullptr);
-	//dispatcher_create(&_shutdown_dispatcher, nullptr, _shutdown_handler, nullptr);
+	dispatcher_create(&_shutdown_dispatcher, nullptr, _shutdown_handler, nullptr);
 
 	mavlink_handler_t heartbeat_handler = (mavlink_handler_t) { .MsgId = MAVLINK_MSG_ID_HEARTBEAT, .Func = _fc_heartbeat };
 	mavlink_add_handler(&heartbeat_handler);
@@ -151,19 +153,21 @@ void main()
 
 static void _shutdown ()
 {
-	board_enable_battery(false);
+	//board_enable_battery(false);
+
+	while (1);	// world ends here and now
 }
 
 
+// Configures mavlink stream
+
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	// this configures mavlink stream
-
-//		mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
-//			.CmdId = MAV_CMD_SET_MESSAGE_INTERVAL, 
-//			.Param1 = MAVLINK_MSG_ID_ATTITUDE,
-//			.Param2 = 250 };
-//		mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
+	/*mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
+		.CmdId = MAV_CMD_SET_MESSAGE_INTERVAL, 
+		.Param1 = MAVLINK_MSG_ID_ATTITUDE,
+		.Param2 = 250 };
+	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));*/
 
 	mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_EXTRA1,	// requests attitude msg
@@ -204,11 +208,27 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 	printf("DEADMAN TIMEOUT\n");
 }
 
+	
+static int _shutdown_count = 0;
+
 static void _shutdown_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
+	if (!board_detect_ext_power ())
+		_shutdown_count++;
+	else
+		_shutdown_count = 0;	// got power, reset time counter
+
+	if (_shutdown_count >= (_conf.automatic_power_off * 60))
+		_shutdown();
 
 	dispatcher_add(context, dispatcher, 1000);	
 }
+
+static void _shutdown_cancel ()
+{
+	_shutdown_count = 0;
+}
+
 
 static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t *msg, unsigned length)
 {
@@ -218,6 +238,8 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	mavlink_msg_heartbeat_t *data = (mavlink_msg_heartbeat_t *)msg->Payload;
 	mavlink_state_t state = data->SystemStatus;
 
+	_shutdown_cancel ();
+
 	// WARNING: APM flight controller is reported to stop the heartbeat for seconds in his startup routines
 	dispatcher_add(&_context, &_deadman_dispatcher, _conf.deadman_ms);	
 	_curr_state = state;
@@ -226,19 +248,16 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
-			_led_flash(LED_RED, 50);
-            //printf("BOOT\n"); 
+			_led_flash(LED_RED, 50); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
-			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	
-            //printf("CALIBRATION\n"); 
+			_led_flash(LED_RED | LED_GREEN | LED_BLUE, 50);	 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
 			_led_flash(LED_GREEN, 500);	
 
-			//printf("STANDBY\n");
 			if (_prev_state != MAV_STATE_STANDBY)
 			{
 				printf("autopilot: %s\n", _autopilot[data->Autopilot]);
@@ -252,13 +271,11 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 
 		case MAV_STATE_ACTIVE:	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			//printf(state == MAV_STATE_ACTIVE ? "ACTIVE\n" : "CRITICAL\n");
 			_led_flash(LED_RED | LED_GREEN, 500); 
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
-   			//printf("EMERGENCY\n");
 			// should we just fire, here?
 			if (_armed)
 				_led_flash(LED_RED | LED_GREEN, 50);	
@@ -269,18 +286,15 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 			break;
 
 		case MAV_STATE_FLIGHT_TERMINATION:	// NOTE: arducopter NEVER sends this state
-   			//printf("TERMINATION\n");
 			// should we just fire, here?
-			//printf("*FLIGHT CONTROLLER TERMINATION*\n");
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_POWEROFF:
-			//printf("POWER OFF\n");
 			// NOTHING
 			break;
 		default:
-			//printf("UNKNOWN\n");
+			// UNKNOWN
 			break;
 	}
 }
@@ -302,7 +316,7 @@ static void _attitude(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 						data->Roll > _conf.panic_angle.roll_min &&
 						data->Roll < _conf.panic_angle.roll_max;
 
-	if (!panic_ready || warn_time >= _conf.warn_to_panic_ms)
+	if (!panic_ready || warn_time >= 10) //_conf.warn_to_panic_ms)
 	{
 		if (!_already_fired)
 		{
