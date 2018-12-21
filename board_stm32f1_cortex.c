@@ -46,10 +46,10 @@ void __board_initialize()
    gpio_pin_config(PC5, GPIO_MODE_INPUT);	// Ext. 12V detect 0/1
 	#define  EXTP_PIN PC5	
 
-    gpio_pin_config(PC0, GPIO_MODE_INPUT | GPIO_MODEF_PULL_DOWN);	// Batt sense (adc)
+    gpio_pin_config(PC0, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Batt sense (adc)
 	#define  BATT_SENSE_PIN PC0	
 
-	gpio_pin_config(PC4, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_DOWN);	// Battery switch
+	gpio_pin_config(PC4, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_UP); //GPIO_MODEF_PULL_DOWN);	// Battery switch
 	#define  BATT_PIN PC4	
 
 	gpio_pin_config(PA11, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// CAN1 RX REMAP 0
