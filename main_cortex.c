@@ -15,15 +15,24 @@
 
 //#define ENABLE_WATCHDOG
 
+typedef enum
+{
+	BUZZER_OFF = 0,
+	BUZZER_WARNING = 1,
+	BUZZER_FULL_ALARM = 2,
+} buzzer_mode_t;
+
 static mavlink_state_t _prev_state = MAV_STATE_UNINIT;
 static mavlink_state_t _curr_state = MAV_STATE_UNINIT;
-static bool _detonator = false;
+static bool _detonation_lines = false;
 static bool _armed = false;
 static bool _already_fired = false;
 static int _fire_cause = FIRED_NOT;
+static int _buzzer_warning_count = 0;
 
 static struct {
 	struct { float pitch_min, pitch_max, roll_min, roll_max; } warn_angle, panic_angle;
+	int without_fc_warning;  // seconds
 	int automatic_power_off; // min
 	//int safety_height_mm; // not doable for now, needs a distance sensor
 	int deadman_ms;
@@ -32,6 +41,7 @@ static struct {
 
 	} _conf = { 
     .automatic_power_off = 6,
+	.without_fc_warning = 15,
 	.warn_angle = { .pitch_min = -0.8f, .pitch_max = 0.8f, .roll_min = -0.8f, .roll_max = 0.8f },
 	.panic_angle = { .pitch_min = -2.0f, .pitch_max = 2.0f, .roll_min = -2.0f, .roll_max = 2.0f },
 	//.safety_height_mm = 30000,
@@ -46,6 +56,12 @@ static struct {
 static dispatcher_t _led_flash_dispatcher;
 static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher);
 static void _led_flash_conf(led_mask_t mask, unsigned time);
+
+static dispatcher_t _buzzer_dispatcher;
+static dispatcher_t _buzzer_off_dispatcher;
+static void _buzzer(dispatcher_context_t *context, dispatcher_t *dispatcher);
+static void _buzzer_off(dispatcher_context_t *context, dispatcher_t *dispatcher);
+static void _buzzer_conf(buzzer_mode_t mode);
 
 static dispatcher_t _fire_off_dispatcher;
 
@@ -95,11 +111,11 @@ void main()
 	// WARNING: Line detection only works when the battery is enabled
 	thread_sleep(100);
 
-	_detonator = board_detect_lines (0) && board_detect_lines (1);
-	printf ("detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
-    //if (!_detonator)
-	//	_request_motor_disabling (); 
-	
+	_detonation_lines = board_detect_lines (0) && board_detect_lines (1);
+	printf ("Detonator lines: %d %d\n",  board_detect_lines (0), board_detect_lines (1));
+	if(!_detonation_lines)
+		_buzzer_conf(BUZZER_WARNING);
+
    	/* Fire test
 	thread_sleep(1000);
 	board_enable_charges(true);
@@ -110,10 +126,13 @@ void main()
 
 	dispatcher_context_create(&_context);
 	dispatcher_create(&_led_flash_dispatcher, nullptr, _led_flash, nullptr);
+	dispatcher_create(&_buzzer_dispatcher, nullptr, _buzzer, nullptr);
+	dispatcher_create(&_buzzer_off_dispatcher, nullptr, _buzzer_off, nullptr);
 	dispatcher_create(&_fire_off_dispatcher, nullptr, _fire_off, nullptr);
 
 	mavlink_initialize(&_context);
 	dispatcher_create(&_mavlink_dispatcher, nullptr, _mavlink_handler, nullptr);
+
 	dispatcher_create(&_deadman_dispatcher, nullptr, _deadman_handler, nullptr);
 	dispatcher_create(&_shutdown_dispatcher, nullptr, _shutdown_handler, nullptr);
 
@@ -133,6 +152,9 @@ void main()
 	 
 	_led_flash_conf(LED_GREEN, 1600);	// start flashing the leds
 	dispatcher_add(&_context, &_led_flash_dispatcher, 1600);
+
+	dispatcher_add(&_context, &_buzzer_dispatcher, 500);
+
 	// Check if we have to shutdown the FTS
 	dispatcher_add(&_context, &_shutdown_dispatcher, 1000);	
 
@@ -159,23 +181,23 @@ static void _shutdown ()
 
 // Configures mavlink stream
 
+/*mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
+	.CmdId = MAV_CMD_SET_MESSAGE_INTERVAL, 
+	.Param1 = MAVLINK_MSG_ID_ATTITUDE,
+	.Param2 = 250 };
+mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));*/
+
+/*mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
+	.StreamId = MAV_DATA_STREAM_RAW_SENSORS,
+	.MsgRate = 5, .StartStop = 1 };
+mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req2, sizeof(req2));*/
+
 static void _mavlink_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	/*mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
-		.CmdId = MAV_CMD_SET_MESSAGE_INTERVAL, 
-		.Param1 = MAVLINK_MSG_ID_ATTITUDE,
-		.Param2 = 250 };
-	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));*/
-
 	mavlink_msg_request_data_stream_t req1 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_EXTRA1,	// requests attitude msg
 		.MsgRate = 10, .StartStop = 1 };
 	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req1, sizeof(req1));
-
-	/*mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
-		.StreamId = MAV_DATA_STREAM_RAW_SENSORS,
-		.MsgRate = 5, .StartStop = 1 };
-	mavlink_send_msg(MAVLINK_MSG_ID_REQUEST_DATA_STREAM, &req2, sizeof(req2));*/
 
 	mavlink_msg_request_data_stream_t req2 = (mavlink_msg_request_data_stream_t) { .TargetSysId = 1, .TargetCompId = 1,
 		.StreamId = MAV_DATA_STREAM_POSITION,
@@ -222,8 +244,9 @@ static void _shutdown_handler(dispatcher_context_t *context, dispatcher_t *dispa
 	dispatcher_add(&_context, &_shutdown_dispatcher, 1000);
 }
 
-static void _shutdown_cancel ()
+static void _countdown_resets ()
 {
+	_buzzer_warning_count = 0;
 	_shutdown_count = 0;
 }
 
@@ -236,7 +259,7 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	mavlink_msg_heartbeat_t *data = (mavlink_msg_heartbeat_t *)msg->Payload;
 	mavlink_state_t state = data->SystemStatus;
 
-	_shutdown_cancel ();
+	_countdown_resets ();
 
 	// WARNING: APM flight controller is reported to stop the heartbeat for seconds in his startup routines
 	dispatcher_add(&_context, &_deadman_dispatcher, _conf.deadman_ms);	
@@ -436,6 +459,10 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 	}
 }
 
+
+// MAV_CMD_DO_SET_MODE 
+// MAV_MODE_FLAG_MANUAL_INPUT_ENABLED ? ponerlo a 0?
+
 static void _request_motor_disabling()
 {
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
@@ -463,7 +490,7 @@ static void _fire()
         if (_armed)
 		{
 			datalog_recording (false);
-			board_set_buzzer (true);	// Alarm! Until physical disconnect or battery depletion 
+            _buzzer_conf(BUZZER_FULL_ALARM); // Alarm! Until physical disconnect or battery depletion 
 			_request_motor_disabling();
        		_led_flash_conf(LED_BLUE, 500);
            	board_fire(true);
@@ -513,15 +540,41 @@ static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher)
 	static int on_off = 0;
 
 	if (on_off)
-	{
 		board_set_led(_current_color, -1);
-	}
 	else
-	{
 		board_set_led(_leds_on, 0);
-	}
 
     on_off ^= 1;
 
 	dispatcher_add(&_context, &_led_flash_dispatcher, _current_flash_time);
 }
+
+static buzzer_mode_t _buzzer_mode = BUZZER_OFF;
+
+static void _buzzer_conf(buzzer_mode_t mode)
+{
+	// Once the alarm is set, it cannot be stopped
+	if (_buzzer_mode != BUZZER_FULL_ALARM)
+		_buzzer_mode = mode;
+}
+
+static void _buzzer(dispatcher_context_t *context, dispatcher_t *dispatcher)
+{
+	_buzzer_warning_count++;
+	if (_buzzer_warning_count > (_conf.without_fc_warning * 2))
+		_buzzer_conf(BUZZER_WARNING);
+
+	if (_buzzer_mode != BUZZER_OFF)
+		board_set_buzzer(true);
+
+	dispatcher_add(&_context, &_buzzer_off_dispatcher, 50);
+}
+
+static void _buzzer_off(dispatcher_context_t *context, dispatcher_t *dispatcher)
+{
+	if (_buzzer_mode != BUZZER_FULL_ALARM)
+		board_set_buzzer(false);
+
+	dispatcher_add(&_context, &_buzzer_dispatcher, 450);
+}
+
