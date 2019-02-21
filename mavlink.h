@@ -3,6 +3,7 @@
 
 #include <kernel/list.h>
 
+ 
 
 typedef struct 
 {
@@ -58,6 +59,12 @@ typedef struct __packed
 	float Temperature;
 	unsigned short FieldsUpdated;
 } mavlink_msg_highres_imu_t;
+
+typedef struct __packed
+{
+	unsigned char TargetSysId, TargetCompId;
+	unsigned short chann_raw[18];
+} mavlink_msg_rc_channels_override_t;
 
 typedef struct __packed
 {
@@ -146,6 +153,8 @@ typedef enum
 	MAVLINK_MSG_ID_REQUEST_DATA_STREAM = 66,
 	MAVLINK_MSG_ID_DATA_STREAM = 67,
 	// [...]
+    MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE = 70,
+	// [...]
     MAVLINK_MSG_ID_COMMAND_LONG = 76,
     MAVLINK_MSG_ID_COMMAND_ACK = 77,
 	// [...]
@@ -157,6 +166,7 @@ typedef enum
 
 typedef enum
 {
+	MAV_CMD_DO_SET_SERVO         = 183,
 	MAV_CMD_DO_FLIGHTTERMINATION = 185,
 	MAV_CMD_GET_MESSAGE_INTERVAL = 510,
     MAV_CMD_SET_MESSAGE_INTERVAL = 511,

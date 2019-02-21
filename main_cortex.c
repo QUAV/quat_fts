@@ -460,16 +460,36 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 }
 
 
-// MAV_CMD_DO_SET_MODE 
-// MAV_MODE_FLAG_MANUAL_INPUT_ENABLED ? ponerlo a 0?
 
+
+// Tell flight controller to stop motor inmediately 
 static void _request_motor_disabling()
 {
+#if 1
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
-		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, 
-		.Param1 = 1.0f };
-	// Tell flight controller to stop motor inmediately 
+		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, .Param1 = 1.0f };
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
+#else
+	// Trying to really stop rotors by ussing manual control
+	// (tentative, not working)
+
+	// MAV_CMD_DO_SET_MODE 
+	// MAV_MODE_FLAG_MANUAL_INPUT_ENABLED ? ponerlo a 0?
+
+	mavlink_msg_rc_channels_override_t cmd = (mavlink_msg_rc_channels_override_t) 
+	{ 
+		.TargetSysId = 1, 
+		.TargetCompId = 1, 
+	};
+
+	int i;
+	for (i=0; i<8; i++)
+		cmd.chann_raw[i] = 1000;	// minimal throttle
+	for (i=8; i<18; i++)
+		cmd.chann_raw[i] = 0xffff;	// don't touch
+
+	mavlink_send_msg(MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, &cmd, sizeof(cmd));
+#endif
 }
 
 				

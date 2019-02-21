@@ -59,11 +59,8 @@
       <file file_name="mavlink.c" />
       <file file_name="datalog.c" />
       <folder Name="third_party">
-        <file file_name="third_party/canard.c" />
-        <file file_name="third_party/canard_stm32.c" />
         <file file_name="third_party/stm32f10x_flash.c" />
       </folder>
-      <file file_name="uavcan.c" />
       <file file_name="detonator_link.c" />
     </folder>
     <folder Name="System Files">

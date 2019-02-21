@@ -2,8 +2,6 @@
 * FTS requirements
 
 - Conection with pixhawk, fw Arducopter (Autopilot firmware does not transmit sensor data frequently enough)
-- Telemmetry: IMU data at least 10 Hz
-              HEARTBEAT at least 1 hz
 
 * Color codes
 
