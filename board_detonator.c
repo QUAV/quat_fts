@@ -19,7 +19,7 @@ void __board_initialize()
 
 	gpio_pin_config(PA2, GPIO_MODE_ALT_FUNC | GPIO_MODEF_MED_SPEED);	// USART2_TX REMAP 0	(SBUS) NOTE: inverted signal
 	gpio_pin_config(PA3, GPIO_MODE_INPUT);								// USART2_Rx REMAP 0	(SBUS) NOTE: inverted signal
-	#define FTS_UART_MODULE 1	// USART
+	#define FTS_UART_MODULE 0	// USART
 
 	// Debug UART
 	gpio_pin_config(PA9, GPIO_MODE_ALT_FUNC | GPIO_MODEF_HIGH_SPEED);	// USART1_TX REMAP 0	(SBUS) NOTE: inverted signal
