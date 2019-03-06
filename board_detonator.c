@@ -30,6 +30,15 @@ void __board_initialize()
 	#define  DETECT_PIN_1 PB7
 	#define  DETECT_PIN_2 PB5
 
+    gpio_pin_config(PC0, GPIO_MODE_INPUT | GPIO_MODEF_PULL_UP);	// Batt sense (adc)
+	#define  BATT_SENSE_PIN PC0	
+
+	gpio_pin_config(PC5, GPIO_MODE_INPUT);	// Ext. 12V detect 0/1
+	#define  EXTP_PIN PC5	
+
+	gpio_pin_config(PC4, GPIO_MODE_OUTPUT | GPIO_MODEF_PULL_UP);	// Battery switch
+	#define  BATT_PIN PC4	
+
    	//gpio_pin_config(PA8, GPIO_MODE_ALT_FUNC);	// TIM1_CHN1
 	//#define PPM_IN_PIN PA8	// TIM2
 }
@@ -49,12 +58,6 @@ void board_set_led(led_mask_t mask, led_mask_t value)
 
 	if (mask & LED_BLUE)
 		hal_gpio_pin_set(LED_B_PIN, value & LED_BLUE);
-
-	/*if (mask & LED_AMBER)
-	{
-		hal_gpio_pin_set(LED_R_PIN, value & LED_RED);
-		hal_gpio_pin_set(LED_G_PIN, value & LED_GREEN);
-	}*/
 }
 
 bool board_detect_lines (unsigned line)
@@ -65,6 +68,21 @@ bool board_detect_lines (unsigned line)
 	return !((line == 0) ? hal_gpio_pin(DETECT_PIN_1) : hal_gpio_pin(DETECT_PIN_2));
 }
 
+bool board_detect_ext_power ()
+{
+	return hal_gpio_pin(EXTP_PIN);
+}
+
+void board_enable_battery(bool enable)
+{
+	hal_gpio_pin_set(BATT_PIN, enable);
+}
+
+int board_battery_voltage ()	// in tenths of volt
+{
+	bool threshold = hal_gpio_pin(BATT_SENSE_PIN);
+	return threshold ? 84 : 60;	// hack until we have adc 
+}
 
 #ifdef FTS_UART_MODULE
 

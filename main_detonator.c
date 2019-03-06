@@ -52,13 +52,36 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 
 static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
+	static int _shutdown_count = 0;
 	bool a = board_detect_lines (0);
 	bool b = board_detect_lines (1);
+
+	// Is detonation being requested
 	if (a && b)
 	{
-		_leds_on = LED_RED;
-		board_fts_write("DETONATE\n", 9);
+		if (board_battery_voltage() > 60)	// Try to be certain about battery presence >6.0V
+		{
+			_leds_on = LED_RED;
+			board_fts_write("DETONATE\n", 9);
+		}
 	}
+	else	
+	{
+		// Is shutdown being requested
+		if (a)
+		{
+			if (_shutdown_count > 20)	// 1 second
+			{
+				board_enable_battery(false);
+				while (1);	// world ends here and now
+			}
+
+			_shutdown_count++;
+		}
+		else
+			_shutdown_count = 0;
+	}
+
 	dispatcher_add(&_context, &_firestarter_dispatcher, 50);
 }
 
@@ -69,6 +92,13 @@ void main()
 
 	printf("\n\nDetonator board boot!\n");
  
+	// Auto-start
+	// A physical power bypass enables the board. We switch the power transistor so the board is
+	// correctly feed through the battery DC-DC
+	board_enable_battery(true);
+	thread_sleep(500);	// We need to be sure the battery DC-DC is working or the detonator buttons 
+	                    // will be badly read
+
 	dispatcher_context_create(&_context);
 	dispatcher_create(&_led_on_dispatcher, nullptr, _led_on, nullptr);
 	dispatcher_create(&_led_off_dispatcher, nullptr, _led_off, nullptr);

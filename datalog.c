@@ -84,6 +84,7 @@ void _datalog_init()
 {
 	_dl.mark[0] = 'F', _dl.mark[1] = 'T', _dl.mark[2] = 'S';
 	_dl.version = 1;
+	_dl.cause = FIRED_NOT;
 	_dl.curr_entry = 0;
 	_dl.curr_datalog_idx = 0;
 
