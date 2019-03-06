@@ -55,7 +55,7 @@ static struct {
 
 static dispatcher_t _led_flash_dispatcher;
 static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher);
-static void _led_flash_conf(led_mask_t mask, unsigned time);
+static void _led_flash_conf(led_mask_t mask, unsigned time, bool latch);
 
 static dispatcher_t _buzzer_dispatcher;
 static dispatcher_t _buzzer_off_dispatcher;
@@ -95,9 +95,10 @@ void main()
 	board_set_led(-1, LED_GREEN); // enabled
 
 	// LED test
-	//board_set_led(-1, LED_GREEN); 
+	//board_set_led(-1, LED_RED|LED_GREEN|LED_BLUE); 
 	//thread_sleep(1000);
 	//board_set_led(-1, 0);
+
 
 	// BUZZER test
 	//board_set_buzzer(true); 
@@ -150,7 +151,7 @@ void main()
 	detonator_link_initialize(&_context, _detonator_fire);
 	//board_uavcan_init ();
 	 
-	_led_flash_conf(LED_GREEN, 1600);	// start flashing the leds
+	_led_flash_conf(LED_GREEN, 1600, false);	// start flashing the leds
 	dispatcher_add(&_context, &_led_flash_dispatcher, 1600);
 
 	dispatcher_add(&_context, &_buzzer_dispatcher, 500);
@@ -269,15 +270,15 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
-			_led_flash_conf(LED_RED, 50); 
+			_led_flash_conf(LED_RED, 50, false); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
-			_led_flash_conf(LED_RED | LED_GREEN | LED_BLUE, 50);	 
+			_led_flash_conf(LED_RED | LED_GREEN | LED_BLUE, 50, false);	 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
-			_led_flash_conf(LED_GREEN, 500);	
+			_led_flash_conf(LED_GREEN, 500, false);	
 
 			if (_prev_state != MAV_STATE_STANDBY)
 			{
@@ -292,16 +293,16 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 
 		case MAV_STATE_ACTIVE:	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			_led_flash_conf(LED_RED | LED_GREEN, 500); 
+			_led_flash_conf(LED_RED | LED_GREEN, 500, false); 
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
 			// should we just fire, here?
 			if (_armed)
-				_led_flash_conf(LED_RED | LED_GREEN, 50);	
+				_led_flash_conf(LED_RED | LED_GREEN, 50, false);	
 			else
-				_led_flash_conf(LED_GREEN, 50);	
+				_led_flash_conf(LED_GREEN, 50, false);	
  
 			_prev_state = state;
 			break;
@@ -512,7 +513,7 @@ static void _fire()
 			datalog_recording (false);
             _buzzer_conf(BUZZER_FULL_ALARM); // Alarm! Until physical disconnect or battery depletion 
 			_request_motor_disabling();
-       		_led_flash_conf(LED_BLUE, 500);
+       		_led_flash_conf(LED_BLUE, 500, false);
            	board_fire(true);
 
 			dispatcher_add(&_context, &_fire_off_dispatcher, 600);
@@ -538,21 +539,18 @@ static led_mask_t _current_color = LED_GREEN;
 static int _current_flash_time = 500;
 static led_mask_t _leds_on = 0;
 
-#define LED_FIRED_COLOR  LED_BLUE 
 
-static void _led_flash_conf(led_mask_t color, unsigned time)
+static void _led_flash_conf(led_mask_t color, unsigned time, bool latch)
 {
-	static bool fired_latch = false;
-	_current_color = color;
-	_current_flash_time = time;
+	static bool _fired_latch = false;
+	if (!_fired_latch)
+	{
+		_current_color = color;
+		_current_flash_time = time;
+        _fired_latch = latch;
+	}
 
-	if (_current_color == LED_FIRED_COLOR)
-		fired_latch = true;
-
-	if (fired_latch)	// once fired, will not change anymore
-		_current_color = LED_FIRED_COLOR;
-	else
-		_leds_on = _current_color;
+	_leds_on = _current_color;
 }
 
 static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher)
