@@ -223,7 +223,7 @@ static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispat
 {
 	if (!_already_fired)
 	{
-		_fire_cause = FIRED_DEADMAN;
+		_fire_cause = FIRED_DEADMAN; 
 		_fire();
 	}
 	printf("DEADMAN TIMEOUT\n");
@@ -299,11 +299,7 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 
 		case MAV_STATE_EMERGENCY:
 			// should we just fire, here?
-			if (_armed)
-				_led_flash_conf(LED_RED | LED_GREEN, 50, false);	
-			else
-				_led_flash_conf(LED_GREEN, 50, false);	
- 
+			_led_flash_conf(LED_RED | LED_GREEN, 50, false);	
 			_prev_state = state;
 			break;
 
@@ -513,7 +509,7 @@ static void _fire()
 			datalog_recording (false);
             _buzzer_conf(BUZZER_FULL_ALARM); // Alarm! Until physical disconnect or battery depletion 
 			_request_motor_disabling();
-       		_led_flash_conf(LED_BLUE, 500, false);
+       		_led_flash_conf(LED_BLUE, 500, true);
            	board_fire(true);
 
 			dispatcher_add(&_context, &_fire_off_dispatcher, 600);
