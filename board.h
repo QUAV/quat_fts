@@ -12,7 +12,11 @@ typedef enum
 	LED_RED = (1<<0),
 	LED_GREEN = (1<<1),
 	LED_BLUE = (1<<2),
-	LED_RGB = LED_RED|LED_GREEN|LED_BLUE,
+
+	LED_YELLOW = (1<<0)|(1<<1), 
+	LED_INDIGO = (1<<1)|(1<<2), 
+	LED_WHITE = (1<<0)|(1<<1)|(1<<2),
+
 	LED_AMBER = (1<<3),
 } led_mask_t;
 

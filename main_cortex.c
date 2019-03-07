@@ -92,10 +92,10 @@ static dispatcher_context_t _context;
 void main()
 {
 	board_set_led(-1, 0); // switch off all leds
-	board_set_led(-1, LED_GREEN); // enabled
+    _led_flash_conf(LED_BLUE,500,false);
 
 	// LED test
-	//board_set_led(-1, LED_RED|LED_GREEN|LED_BLUE); 
+	//board_set_led(-1, LED_INDIGO); 
 	//thread_sleep(1000);
 	//board_set_led(-1, 0);
 
@@ -151,7 +151,7 @@ void main()
 	detonator_link_initialize(&_context, _detonator_fire);
 	//board_uavcan_init ();
 	 
-	_led_flash_conf(LED_GREEN, 1600, false);	// start flashing the leds
+	_led_flash_conf(LED_BLUE, 500, false);	// start flashing the leds
 	dispatcher_add(&_context, &_led_flash_dispatcher, 1600);
 
 	dispatcher_add(&_context, &_buzzer_dispatcher, 500);
@@ -270,11 +270,11 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 	switch(state)
 	{
 		case MAV_STATE_BOOT:
-			_led_flash_conf(LED_RED, 50, false); 
+			_led_flash_conf(LED_WHITE, 500, false); 
 			_prev_state = MAV_STATE_BOOT;
 			break;
 		case MAV_STATE_CALIBRATING:
-			_led_flash_conf(LED_RED | LED_GREEN | LED_BLUE, 50, false);	 
+			_led_flash_conf(LED_WHITE, 500, false);	 
 			_prev_state = MAV_STATE_CALIBRATING;
 			break;
 		case MAV_STATE_STANDBY:
@@ -292,14 +292,17 @@ static void _fc_heartbeat(const mavlink_handler_t *handler, const mavlink_msg_t 
 			break;
 
 		case MAV_STATE_ACTIVE:	
+			_led_flash_conf(LED_GREEN, 50, false); 
+			break;
+	
 		case MAV_STATE_CRITICAL:			// NOTE: arducopter sends this in failsafe
-			_led_flash_conf(LED_RED | LED_GREEN, 500, false); 
+			_led_flash_conf(LED_YELLOW, 50, false); 
 			_prev_state = state;
 			break;
 
 		case MAV_STATE_EMERGENCY:
 			// should we just fire, here?
-			_led_flash_conf(LED_RED | LED_GREEN, 50, false);	
+			_led_flash_conf(LED_RED, 500, false);	
 			_prev_state = state;
 			break;
 
@@ -509,7 +512,7 @@ static void _fire()
 			datalog_recording (false);
             _buzzer_conf(BUZZER_FULL_ALARM); // Alarm! Until physical disconnect or battery depletion 
 			_request_motor_disabling();
-       		_led_flash_conf(LED_BLUE, 500, true);
+       		_led_flash_conf(LED_RED, 50, true);
            	board_fire(true);
 
 			dispatcher_add(&_context, &_fire_off_dispatcher, 600);
@@ -556,7 +559,7 @@ static void _led_flash(dispatcher_context_t *context, dispatcher_t *dispatcher)
 	if (on_off)
 		board_set_led(_current_color, -1);
 	else
-		board_set_led(_leds_on, 0);
+		board_set_led(-	1, 0);
 
     on_off ^= 1;
 

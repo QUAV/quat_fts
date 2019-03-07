@@ -102,7 +102,9 @@ static void _do_msg(const mavlink_msg_t *msg, unsigned length)
 	{
 		case MAVLINK_MSG_ID_HEARTBEAT:
 			beat = (mavlink_msg_heartbeat_t *)msg->Payload;
-			printf("%d-%d-%d-%d (%d) %s\n", beat->Autopilot, beat->BaseMode, beat->Type, beat->MavlinkVersion, beat->SystemStatus, _states[beat->SystemStatus]);
+			printf("%d-%d-%d-%d (%d) %s (%s)\n", beat->Autopilot, beat->BaseMode, beat->Type, beat->MavlinkVersion, beat->SystemStatus,
+			                                _states[beat->SystemStatus],
+											(beat->BaseMode & MAV_MODE_FLAG_SAFETY_ARMED) ? "A" : "D");
 			break;
 		case MAVLINK_MSG_ID_ATTITUDE:
 			printf("att\n");
