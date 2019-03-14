@@ -88,7 +88,6 @@ static void _shutdown ();
 
 static dispatcher_context_t _context;
 
-
 void main()
 {
 	board_set_led(-1, 0); // switch off all leds
@@ -221,6 +220,11 @@ static void _detonator_fire()
 
 static void _deadman_handler(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
+	if(!_armed)
+	{
+		_led_flash_conf(LED_BLUE, 500, false);	// Lost connection with the FC; user feedback
+	}
+
 	if (!_already_fired)
 	{
 		_fire_cause = FIRED_DEADMAN; 
