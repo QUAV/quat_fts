@@ -177,7 +177,7 @@
     Name="Release"
     c_preprocessor_definitions="NDEBUG"
     gcc_debugging_level="Level 1"
-    gcc_optimization_level="Level 1"
+    gcc_optimization_level="Level 2"
     hidden="Yes" />
   <configuration
     Name="Naze32r5"
@@ -221,4 +221,7 @@
   <configuration
     Name="FTS_F105_Cortex_Debug"
     inherited_configurations="FTS_F105_Cortex;Debug;THUMB" />
+  <configuration
+    Name="FTS_F105_Cortex_Release"
+    inherited_configurations="FTS_F105_Cortex;THUMB;Release" />
 </solution>
