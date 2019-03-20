@@ -39,8 +39,8 @@ static unsigned char _send_seq = 1;
 void mavlink_initialize(dispatcher_context_t *context)
 {
 	event_create(&_rx_event, EVENTF_AUTORESET);
-	static unsigned char _mavlink_input_buffer[64];
-	static unsigned char _mavlink_output_buffer[64];
+	static unsigned char _mavlink_input_buffer[128];
+	static unsigned char _mavlink_output_buffer[128];
 	_cb.Baudrate = _mavlink_baudrate;
 	stream_buffer_create(&_cb.Input, _mavlink_input_buffer, sizeof(_mavlink_input_buffer), &_rx_event, nullptr);
 	stream_buffer_create(&_cb.Output, _mavlink_output_buffer, sizeof(_mavlink_output_buffer), nullptr, nullptr);
@@ -159,18 +159,17 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 	static enum { ML_IDLE = 0, ML_SYNC, ML_DATA, ML_END1, ML_END2 } _state = ML_IDLE;
 	static unsigned _length, _done;
 	static unsigned short _crc, _checksum;
-	static unsigned char _msg[64];
-
-	unsigned char buffer[16];
+	static unsigned char _msg[128];
+	static unsigned char _buffer[128];
 	while(true)
 	{
-		int read = board_mavlink_read(buffer, sizeof(buffer));
+		int read = board_mavlink_read(_buffer, sizeof(_buffer));
 		if (read <= 0) 
 			break;
 
 		for (unsigned i = 0; i < read; i++)
 		{
-			unsigned char c = buffer[i];
+			unsigned char c = _buffer[i];
 			switch (_state)
 			{
 				case ML_IDLE:

@@ -68,7 +68,7 @@ static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *di
 	else	
 	{
 		// Is shutdown being requested
-		if (b)
+		if (!a && b)
 		{
 			if (_shutdown_count > 20)	// 1 second
 			{
