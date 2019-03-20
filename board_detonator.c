@@ -6,7 +6,7 @@
 #include <support/i2c_hal.h>
 #include <support/pwm_hal.h>
 
-#define LED_INVERSION_MASK (LED_RGB)
+#define LED_INVERSION_MASK (LED_WHITE)
 
 void __board_initialize()
 {

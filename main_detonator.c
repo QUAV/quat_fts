@@ -59,7 +59,7 @@ static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *di
 	// Is detonation being requested
 	if (a && b)
 	{
-		if (board_battery_voltage() > 60)	// Try to be certain about battery presence >6.0V
+		//if (board_battery_voltage() > 60)	// Try to be certain about battery presence >6.0V
 		{
 			_leds_on = LED_RED;
 			board_fts_write("DETONATE\n", 9);
@@ -68,7 +68,7 @@ static void _firestarter_handler(dispatcher_context_t *context, dispatcher_t *di
 	else	
 	{
 		// Is shutdown being requested
-		if (a)
+		if (b)
 		{
 			if (_shutdown_count > 20)	// 1 second
 			{
@@ -130,7 +130,7 @@ void main()
 
 		if (!dispatcher_dispatch(&_context, 300))
 		{
-			_leds_on = LED_RGB;
+			_leds_on = LED_WHITE;
 		}
 	}
 }
@@ -146,7 +146,7 @@ void main()
 
 static void _led_on(dispatcher_context_t *context, dispatcher_t *dispatcher)
 {
-	board_set_led(LED_RGB, _leds_on);
+	board_set_led(LED_WHITE, _leds_on);
 
 	dispatcher_add(&_context, &_led_off_dispatcher, 300);
 }
