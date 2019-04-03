@@ -53,7 +53,7 @@ void mavlink_initialize(dispatcher_context_t *context)
 	dispatcher_add(context, &_rx_dispatcher, TIMEOUT_NEVER);
 
 	dispatcher_create(&_heartbeat_dispatcher, nullptr, _heartbeat_dispatch, nullptr);
-	dispatcher_add(context, &_heartbeat_dispatcher, 5000);
+	dispatcher_add(context, &_heartbeat_dispatcher, 1000);
 }
 
 bool mavlink_started()
@@ -81,7 +81,7 @@ static void _heartbeat_dispatch(dispatcher_context_t *context, dispatcher_t *dis
 	_started = true;
 	printf("<- FTS heartbeat\n");
 
-	dispatcher_add(context, dispatcher, 10000); 
+	dispatcher_add(context, dispatcher, 1000); 
 }
 
 static void _do_msg(const mavlink_msg_t *msg, unsigned length)
@@ -184,7 +184,7 @@ static void _rx_dispatch(dispatcher_context_t *context, dispatcher_t *dispatcher
 					_crc = _crc16(_crc, c);
 					_state = ML_DATA;
 					break;
-				case ML_DATA:
+				case ML_DATA:	
 					if (_done < sizeof(_msg))
 						_msg[_done] = c;
 					_done++;
