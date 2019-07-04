@@ -13,6 +13,14 @@
 
 #include "datalog.h"
 
+#define FLAVOUR_FULLY_FEATURED          (1)
+#define FLAVOUR_WITHOUT_FC_DISARMING    (2)
+#define FLAVOUR_ONLY_MANUAL_DETONATION  (3)
+
+#define VERSION_FLAVOUR  (FLAVOUR_FULLY_FEATURED)
+//#define VERSION_FLAVOUR  (FLAVOUR_WITHOUT_FC_DISARMING)
+//#define VERSION_FLAVOUR  (FLAVOUR_ONLY_MANUAL_DETONATION)
+
 //#define ENABLE_WATCHDOG
 
 typedef enum
@@ -469,12 +477,14 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 // Tell flight controller to stop motor inmediately 
 static void _request_motor_disabling()
 {
-#if 1
+#if VERSION_FLAVOUR != FLAVOUR_WITHOUT_FC_DISARMING
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
 		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, .Param1 = 1.0f };
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
-#else
-	// Trying to really stop rotors by ussing manual control
+#endif
+
+#if 0
+	// Trying to really stop rotors by using manual control
 	// (tentative, not working)
 
 	// MAV_CMD_DO_SET_MODE 
@@ -505,6 +515,15 @@ static void _set_armed (bool arm)
 
 static void _fire()
 {
+#if VERSION_FLAVOUR  == FLAVOUR_ONLY_MANUAL_DETONATION
+	if (_fire_cause != FIRED_MANUAL)
+	{
+		// Using this flavour of the fw, detected fire cases are just signaled using the buzzer
+		_buzzer_conf(BUZZER_WARNING);
+		return;
+	}
+#endif
+
 	if (_already_fired)
 	{
 		printf("new fire condition, already fired\n");
