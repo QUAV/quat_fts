@@ -477,7 +477,7 @@ static void _position(const mavlink_handler_t *handler, const mavlink_msg_t *msg
 // Tell flight controller to stop motor inmediately 
 static void _request_motor_disabling()
 {
-#if VERSION_FLAVOUR != FLAVOUR_WITHOUT_FC_DISARMING
+#if VERSION_FLAVOUR == FLAVOUR_FULLY_FEATURED
 	mavlink_msg_cmd_long_t cmd = (mavlink_msg_cmd_long_t) { .TargetSysId = 1, .TargetCompId = 1, 
 		.CmdId = MAV_CMD_DO_FLIGHTTERMINATION, .Param1 = 1.0f };
 	mavlink_send_msg(MAVLINK_MSG_ID_COMMAND_LONG, &cmd, sizeof(cmd));
@@ -515,7 +515,7 @@ static void _set_armed (bool arm)
 
 static void _fire()
 {
-#if VERSION_FLAVOUR  == FLAVOUR_ONLY_MANUAL_DETONATION
+#if VERSION_FLAVOUR == FLAVOUR_ONLY_MANUAL_DETONATION
 	if (_fire_cause != FIRED_MANUAL)
 	{
 		// Using this flavour of the fw, detected fire cases are just signaled using the buzzer
